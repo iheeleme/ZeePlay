@@ -1072,5 +1072,11 @@
     <string name="settings_zeekr_hud_vertical">Windshield HUD · up / down</string>
     <string name="settings_zeekr_hud_mode_card">dönüş kartı</string>
     <string name="settings_zeekr_hud_mode_map">harita</string>
+    <string name="settings_zeekr_hud_mode_compact">kompakt ok</string>
+    <string name="settings_zeekr_hud_content">HUD içeriği</string>
+    <string name="settings_zeekr_hud_content_map">CarPlay haritası</string>
+    <string name="settings_zeekr_hud_content_card">CarPlay dönüş kartı</string>
+    <string name="settings_zeekr_hud_content_compact">Kompakt ok (ZeePlay)</string>
+    <string name="settings_zeekr_hud_content_description">Map and turn card are drawn by CarPlay and need a reconnect to switch. Compact arrow is drawn by ZeePlay into a small square, so it fits next to the car\'s own HUD widgets. The map is rendered at the size you set below (applies after reconnect).</string>
     <string name="settings_zeekr_cluster_map_description">Shows the iPhone\'s CarPlay map on the instrument-cluster display.</string>
 </resources>

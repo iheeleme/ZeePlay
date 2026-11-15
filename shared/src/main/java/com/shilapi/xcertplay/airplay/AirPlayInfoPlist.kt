@@ -68,9 +68,16 @@ object AirPlayInfoPlist {
             val d = clusterMmPerPixel(config.cluster)
             displays.add(
                 displayEntry(
-                    CarPlayClusterDisplay.hudMap(
-                        config.hudMapSizePercent, config.hudMapMarkerHorizontal, config.hudMapMarkerVertical, d,
-                    ),
+                    if (config.hudMapWidthPixels > 0 && config.hudMapHeightPixels > 0) {
+                        CarPlayClusterDisplay.hudMapPixels(
+                            config.hudMapWidthPixels, config.hudMapHeightPixels,
+                            config.hudMapMarkerHorizontal, config.hudMapMarkerVertical, d,
+                        )
+                    } else {
+                        CarPlayClusterDisplay.hudMap(
+                            config.hudMapSizePercent, config.hudMapMarkerHorizontal, config.hudMapMarkerVertical, d,
+                        )
+                    },
                     STREAM_TYPE_ALT_SCREEN, MAP_UUID,
                 ),
             )

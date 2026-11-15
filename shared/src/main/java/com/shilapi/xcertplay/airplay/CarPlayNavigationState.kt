@@ -46,6 +46,16 @@ object CarPlayNavigationState {
 
     fun setRouteGuidanceActive(active: Boolean) { routeGuidanceActive = active }
 
+    /** The latest next-turn instruction (iAP2 route guidance), for HUD renderers drawn by ZeePlay. */
+    @Volatile
+    var turnGuidance: com.shilapi.xcertplay.hud.ClusterTurnGuidance? = null
+        private set
+
+    fun setTurnGuidance(guidance: com.shilapi.xcertplay.hud.ClusterTurnGuidance?) {
+        turnGuidance = guidance
+        routeGuidanceActive = guidance != null
+    }
+
     /**
      * Appearance requested for the windshield HUD screens only: true = dark (black emits no light on
      * the projector), null = leave them on the phone-wide appearance.
@@ -120,5 +130,5 @@ object CarPlayNavigationState {
     fun register(session: HudScreenHost) { hudSessions.add(session) }
     fun unregister(session: HudScreenHost) { hudSessions.remove(session) }
 
-    fun reset() { phoneOwnsGuidance = false; routeGuidanceActive = false; lastModesSummary = null }
+    fun reset() { phoneOwnsGuidance = false; routeGuidanceActive = false; turnGuidance = null; lastModesSummary = null }
 }

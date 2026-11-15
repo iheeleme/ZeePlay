@@ -111,6 +111,9 @@ data class AirPlayConfig(
     val hudMap: Boolean = false,
     /** HUD map stream size, percent of the base; snapped to [CarPlayClusterDisplay.hudMapSizePresets]. */
     val hudMapSizePercent: Int = 100,
+    /** Explicit HUD map stream size in pixels; 0 uses [hudMapSizePercent]. */
+    val hudMapWidthPixels: Int = 0,
+    val hudMapHeightPixels: Int = 0,
     /** HUD map marker horizontal step (negative = left). */
     val hudMapMarkerHorizontal: Int = 0,
     /** HUD map marker vertical step (negative = up). */

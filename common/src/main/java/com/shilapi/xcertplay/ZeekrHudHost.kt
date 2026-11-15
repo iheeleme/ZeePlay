@@ -40,7 +40,7 @@ class ZeekrHudHost(private val activity: Activity, private val sink: AndroidMedi
             if (presentation == null) {
                 val p = ZeekrHudPresentation(activity, display) { s -> activity.runOnUiThread { onSurface(s) } }
                 p.setOnDismissListener { if (presentation === p) { presentation = null; onSurface(null) } }
-                runCatching { p.show(); presentation = p; lastLayout = null }
+                runCatching { p.show(); presentation = p; lastLayout = null; lastGuidance = null }
                     .onFailure { Log.w(TAG, "HUD presentation failed: ${it.message}") }
             }
         }
@@ -67,46 +67,64 @@ class ZeekrHudHost(private val activity: Activity, private val sink: AndroidMedi
     }
 
     private fun tick() {
+        // Polled here so the HUD stays current while the CarPlay screen is in the background.
+        CarPlayNavigationState.setTurnGuidance(com.shilapi.xcertplay.hud.BydNavigationOutputs.turnGuidanceNow())
         arHud.tick(CarPlayNavigationState.guiding)
         apply()
         CarPlayNavigationState.setHudNightMode(if (ZeekrHudSettings.darkEnabled(activity)) true else null)
         applyLayout()
+        pushGuidance()
+    }
+
+    private var lastGuidance: com.shilapi.xcertplay.hud.ClusterTurnGuidance? = null
+
+    /** Compact mode: hand the latest turn to ZeePlay's own tile (null blanks it). */
+    private fun pushGuidance() {
+        val next = if (ZeekrHudSettings.compactEnabled(activity)) CarPlayNavigationState.turnGuidance else null
+        if (next == lastGuidance) return
+        lastGuidance = next
+        activity.runOnUiThread { presentation?.setGuidance(next) }
     }
 
     private var lastLayout: ZeekrHudPresentation.Layout? = null
 
     /** Live placement from the settings sliders; no reconnect needed. */
     private fun applyLayout() {
-        val card = ZeekrHudSettings.cardEnabled(activity)
-        val stream = if (card) {
-            AirPlayInfoPlist.CARD_WIDTH to AirPlayInfoPlist.CARD_HEIGHT
-        } else {
-            val map = com.shilapi.xcertplay.airplay.CarPlayClusterDisplay.hudMap(ZeekrHudSettings.sizePercent(activity), 0, 0, 1.0)
-            map.widthPixels to map.heightPixels
+        val mode = ZeekrHudSettings.mode(activity)
+        val stream = when (mode) {
+            ZeekrHudSettings.MODE_CARD -> AirPlayInfoPlist.CARD_WIDTH to AirPlayInfoPlist.CARD_HEIGHT
+            ZeekrHudSettings.MODE_COMPACT -> 1 to 1 // square tile
+            else -> ZeekrHudSettings.mapStreamSize(activity)
         }
         val next = ZeekrHudPresentation.Layout(
             stream.first, stream.second,
-            ZeekrHudSettings.layoutSizePercent(activity, card),
-            ZeekrHudSettings.layoutXPercent(activity, card),
-            ZeekrHudSettings.layoutYPercent(activity, card),
+            ZeekrHudSettings.layoutSizePercent(activity, mode),
+            ZeekrHudSettings.layoutXPercent(activity, mode),
+            ZeekrHudSettings.layoutYPercent(activity, mode),
         )
         if (next == lastLayout) return
         lastLayout = next
-        WheelKeyLog.note("HUD host: layout ${if (card) "card" else "map"} ${next.streamWidth}x${next.streamHeight} size=${next.sizePercent}% x=${next.xPercent}% y=${next.yPercent}%")
-        activity.runOnUiThread { presentation?.applyLayout(next) }
+        val name = when (mode) { ZeekrHudSettings.MODE_CARD -> "card"; ZeekrHudSettings.MODE_COMPACT -> "compact"; else -> "map" }
+        WheelKeyLog.note("HUD host: layout $name ${next.streamWidth}x${next.streamHeight} size=${next.sizePercent}% x=${next.xPercent}% y=${next.yPercent}%")
+        val compact = mode == ZeekrHudSettings.MODE_COMPACT
+        activity.runOnUiThread {
+            presentation?.setCompact(compact)
+            presentation?.applyLayout(next)
+        }
     }
 
     private var lastState: String? = null
 
     private fun apply() {
         val guiding = CarPlayNavigationState.guiding
-        // One HUD surface: the glass turn card takes the windshield when enabled; otherwise the map.
+        // One HUD surface and one mode: CarPlay map, CarPlay turn card, or ZeePlay's compact tile
+        // (the tile needs no CarPlay stream).
         val card = ZeekrHudSettings.cardEnabled(activity)
         val map = !card && ZeekrHudSettings.mapEnabled(activity)
         CarPlayNavigationState.setWanted(HudScreen.CARD, guiding && card)
         CarPlayNavigationState.setWanted(HudScreen.MAP, guiding && map)
         val state = "guiding=$guiding owns=${CarPlayNavigationState.phoneOwnsGuidance} " +
-            "route=${CarPlayNavigationState.routeGuidanceActive} card=$card map=$map " +
+            "route=${CarPlayNavigationState.routeGuidanceActive} card=$card map=$map compact=${ZeekrHudSettings.compactEnabled(activity)} " +
             "sessions(card=${CarPlayNavigationState.hasSession(HudScreen.CARD)} " +
             "map=${CarPlayNavigationState.hasSession(HudScreen.MAP)}) surface=${surface != null}"
         if (state != lastState) { lastState = state; WheelKeyLog.note("HUD host: $state") }

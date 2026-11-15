@@ -984,5 +984,11 @@
     <string name="settings_zeekr_hud_vertical">HUD на лобовом · вверх / вниз</string>
     <string name="settings_zeekr_hud_mode_card">карточка поворота</string>
     <string name="settings_zeekr_hud_mode_map">карта</string>
+    <string name="settings_zeekr_hud_mode_compact">компактная стрелка</string>
+    <string name="settings_zeekr_hud_content">Что показывать на лобовом</string>
+    <string name="settings_zeekr_hud_content_map">Карта CarPlay</string>
+    <string name="settings_zeekr_hud_content_card">Карточка поворота CarPlay</string>
+    <string name="settings_zeekr_hud_content_compact">Компактная стрелка (ZeePlay)</string>
+    <string name="settings_zeekr_hud_content_description">Карту и карточку рисует CarPlay, для смены нужно переподключение. Компактную стрелку рисует ZeePlay в небольшой квадрат — она помещается рядом с виджетами машины. Карта рендерится в размере, заданном ниже (применяется после переподключения).</string>
     <string name="settings_zeekr_cluster_map_description">Показывает карту CarPlay с iPhone на приборной панели.</string>
 </resources>

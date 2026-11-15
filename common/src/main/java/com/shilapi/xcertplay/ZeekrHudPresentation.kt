@@ -18,6 +18,8 @@ import android.view.Display
 import android.view.Surface
 import android.view.SurfaceHolder
 import android.view.SurfaceView
+import android.view.View
+import com.shilapi.xcertplay.hud.ClusterTurnGuidance
 import android.view.Gravity
 import android.widget.FrameLayout
 
@@ -36,6 +38,23 @@ internal class ZeekrHudPresentation(
     private var view: SurfaceView? = null
     private var layout: Layout? = null
     private var placed: IntArray? = null
+    private var tile: HudTurnTileView? = null
+    private var compact = false
+
+    /** Main thread. Compact mode shows ZeePlay's own turn tile instead of the CarPlay stream. */
+    fun setCompact(on: Boolean) {
+        if (compact == on && tile != null) return
+        compact = on
+        view?.visibility = if (on) View.GONE else View.VISIBLE
+        tile?.visibility = if (on) View.VISIBLE else View.GONE
+        placed = null
+        place()
+    }
+
+    /** Main thread. */
+    fun setGuidance(guidance: ClusterTurnGuidance?) {
+        tile?.setGuidance(guidance)
+    }
 
     /** Main thread. Re-places the stream; a no-op when nothing changed. */
     fun applyLayout(next: Layout) {
@@ -45,7 +64,7 @@ internal class ZeekrHudPresentation(
 
     private fun place() {
         val frame = root ?: return
-        val surface = view ?: return
+        val surface: View = (if (compact) tile else view) ?: return
         val l = layout ?: return
         val pw = frame.width
         val ph = frame.height
@@ -86,9 +105,14 @@ internal class ZeekrHudPresentation(
         val frame = FrameLayout(context).apply { setBackgroundColor(Color.BLACK) }
         frame.addView(surfaceView, FrameLayout.LayoutParams(
             FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
+        val tileView = HudTurnTileView(context).apply { visibility = if (compact) View.VISIBLE else View.GONE }
+        frame.addView(tileView, FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
+        if (compact) surfaceView.visibility = View.GONE
         frame.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ -> place() }
         root = frame
         view = surfaceView
+        tile = tileView
         setContentView(frame)
         window?.decorView?.setBackgroundColor(Color.BLACK)
     }

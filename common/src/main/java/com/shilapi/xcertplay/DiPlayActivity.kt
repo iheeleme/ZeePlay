@@ -4705,12 +4705,17 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             ZeekrInteractionSettings.setHudEnabled(this, it)
             markReconnectNeeded()
         }
-        toggle(card, getString(R.string.settings_zeekr_hud_card), getString(R.string.settings_zeekr_hud_card_description),
-            ZeekrHudSettings.cardEnabled(this)) {
-            ZeekrHudSettings.setCardEnabled(this, it)
+        // Map / turn card are CarPlay streams (reconnect to change); the compact tile is ZeePlay's own.
+        choice(card, getString(R.string.settings_zeekr_hud_content), listOf(
+            getString(R.string.settings_zeekr_hud_content_map),
+            getString(R.string.settings_zeekr_hud_content_card),
+            getString(R.string.settings_zeekr_hud_content_compact),
+        ), ZeekrHudSettings.mode(this), reconnects = false) {
+            ZeekrHudSettings.setMode(this, it)
             markReconnectNeeded()
-            render() // the placement sliders below switch to the other mode
+            render() // the placement sliders below switch to the chosen mode
         }
+        card.addView(choiceNote(getString(R.string.settings_zeekr_hud_content_description)))
         // Same persistence as the BYD ADB control (that card is not shown in the zeekr edition).
         toggle(card, getString(R.string.settings_zeekr_bt_pause), getString(R.string.settings_zeekr_bt_pause_description),
             AirPlayPersistence.loadBtSuspendDuringCarplay(this)) {
@@ -4724,14 +4729,22 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         }
         // Live: the HUD host re-reads these every tick, so the driver can tune them while looking at the glass.
         // They edit the placement of the mode shown now (turn card or map); each mode keeps its own.
-        val hudCard = ZeekrHudSettings.cardEnabled(this)
-        val hudMode = getString(if (hudCard) R.string.settings_zeekr_hud_mode_card else R.string.settings_zeekr_hud_mode_map)
+        val hudCard = ZeekrHudSettings.mode(this)
+        val hudMode = getString(when (hudCard) {
+            ZeekrHudSettings.MODE_CARD -> R.string.settings_zeekr_hud_mode_card
+            ZeekrHudSettings.MODE_COMPACT -> R.string.settings_zeekr_hud_mode_compact
+            else -> R.string.settings_zeekr_hud_mode_map
+        })
         card.addView(overlaySliderRow(
             "${getString(R.string.settings_zeekr_hud_size)} ($hudMode)",
             ZeekrHudSettings.layoutSizePercents,
             ZeekrHudSettings.layoutSizePercent(this, hudCard),
         ) { it -> getString(R.string.turn_card_overlay_size_option, it) }
-            .also { it.onSave = { v -> ZeekrHudSettings.setLayoutSizePercent(this, hudCard, v) } })
+            .also {
+                it.onSave = { v -> ZeekrHudSettings.setLayoutSizePercent(this, hudCard, v) }
+                // The map is rendered by the iPhone at the size shown, so a new size needs a reconnect.
+                if (hudCard == ZeekrHudSettings.MODE_MAP) it.onCommit = { markReconnectNeeded() }
+            })
         card.addView(overlaySliderRow(
             "${getString(R.string.settings_zeekr_hud_horizontal)} ($hudMode)",
             ZeekrHudSettings.layoutPositionPercents,

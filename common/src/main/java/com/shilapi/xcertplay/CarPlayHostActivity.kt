@@ -485,7 +485,7 @@ open class CarPlayHostActivity : ComponentActivity() {
     private val clusterTurnOverlayListener: (com.shilapi.xcertplay.hud.ClusterTurnGuidance?) -> Unit = { guidance ->
         runOnUiThread {
             clusterTurnGuidance = guidance
-            com.shilapi.xcertplay.airplay.CarPlayNavigationState.setRouteGuidanceActive(guidance != null)
+            com.shilapi.xcertplay.airplay.CarPlayNavigationState.setTurnGuidance(guidance)
             applyClusterTurnOverlay()
             windshieldHud?.update(guidance)
         }
@@ -5134,6 +5134,8 @@ open class CarPlayHostActivity : ComponentActivity() {
             hudCard = zeekrHudDisplayPresent() && ZeekrHudSettings.cardEnabled(this),
             hudMap = zeekrHudDisplayPresent() && ZeekrHudSettings.mapEnabled(this),
             hudMapSizePercent = ZeekrHudSettings.sizePercent(this),
+            hudMapWidthPixels = ZeekrHudSettings.mapStreamSize(this).first,
+            hudMapHeightPixels = ZeekrHudSettings.mapStreamSize(this).second,
             hudMapMarkerHorizontal = ZeekrHudSettings.markerHorizontal(this),
             hudMapMarkerVertical = ZeekrHudSettings.markerVertical(this),
         )

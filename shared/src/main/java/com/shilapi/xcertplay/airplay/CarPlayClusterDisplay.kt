@@ -169,6 +169,26 @@ object CarPlayClusterDisplay {
         )
     }
 
+    /** HUD map display config at an explicit pixel size (the size it is shown at on the HUD). */
+    fun hudMapPixels(
+        width: Int,
+        height: Int,
+        horizontalStep: Int,
+        verticalStep: Int,
+        mmPerPixel: Double,
+    ): AirPlayDisplayConfig = AirPlayDisplayConfig(
+        widthPixels = width,
+        heightPixels = height,
+        widthPhysicalMm = Math.round(width * mmPerPixel).toInt(),
+        heightPhysicalMm = Math.round(height * mmPerPixel).toInt(),
+        fps = HUD_MAP_FPS,
+        primaryInputDevice = 0,
+        features = 0,
+        initialUrl = MAP_URL,
+        safeArea = hudMapSafeArea(width, height, horizontalStep, verticalStep),
+        safeAreaDrawOutside = true,
+    )
+
     private fun hudMapSafeArea(width: Int, height: Int, horizontalStep: Int, verticalStep: Int): AirPlayInsets {
         val half = HUD_MAP_SAFE_PERCENT / 2.0
         val x = (50.0 + horizontalStep.coerceIn(hudMapHorizontalSteps) * HUD_MAP_MARKER_STEP_PERCENT)
