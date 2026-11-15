@@ -93,6 +93,7 @@ import com.shilapi.xcertplay.airplay.AirPlaySession
 import com.shilapi.xcertplay.airplay.AirPlaySessionListener
 import com.shilapi.xcertplay.airplay.CarPlayMediaEngine
 import com.shilapi.xcertplay.airplay.SafeAreaRect
+import com.shilapi.xcertplay.host.BuildConfig
 import com.shilapi.xcertplay.host.R
 import com.shilapi.xcertplay.location.AndroidCarPlayLocationProvider
 import com.shilapi.xcertplay.media.AndroidMediaSink
@@ -5143,7 +5144,10 @@ open class CarPlayHostActivity : ComponentActivity() {
 
     /** A Zeekr windshield HUD display is present (gates advertising the HUD card/map screens). */
     private fun zeekrHudDisplayPresent(): Boolean =
-        runCatching { com.shilapi.xcertplay.hud.zeekr.ZeekrDisplayRouter.hudDisplay(this) != null }.getOrDefault(false)
+        // The windshield HUD is a Zeekr-edition feature; keep it dormant in other editions even if a
+        // similarly shaped presentation display turns up.
+        BuildConfig.IS_ZEEKR &&
+            runCatching { com.shilapi.xcertplay.hud.zeekr.ZeekrDisplayRouter.hudDisplay(this) != null }.getOrDefault(false)
 
     /** Car Bluetooth audio: shows whether the iPhone keeps A2DP/HFP with the car now and once CarPlay runs. */
     private fun logCarBluetoothAudio() {
