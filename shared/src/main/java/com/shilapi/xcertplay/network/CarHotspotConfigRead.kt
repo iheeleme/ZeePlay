@@ -53,6 +53,25 @@ object CarHotspotConfigRead {
         }, log)
     }
 
+    /**
+     * The Zeekr read path: read the car's saved hotspot directly, with no ADB fallback and no write.
+     * A platform-signed build reads [getSoftApConfiguration]; an unprivileged one simply cannot, and
+     * the caller then keeps manual entry. Android 7.1 still reads the unprivileged WifiConfiguration.
+     */
+    fun readLocalOnly(context: Context, sdk: Int = Build.VERSION.SDK_INT, log: (String) -> Unit): Outcome {
+        if (!CarHotspotConfigWrite.supported(sdk)) {
+            log("car hotspot config: unsupported Android $sdk")
+            return Outcome(reason = Reason.UNSUPPORTED_SDK)
+        }
+        if (sdk <= Build.VERSION_CODES.N_MR1) return readWithApp(context, log)
+        return readModernOrFallback({
+            val wifi = context.applicationContext.getSystemService(WifiManager::class.java)
+            WifiManager::class.java.getMethod("getSoftApConfiguration").invoke(wifi) as? SoftApConfiguration
+        }, {
+            Outcome(reason = Reason.UNAVAILABLE)
+        }, log)
+    }
+
     /** Read locally first; permission/hidden-API failures retain the explicit ADB import path. */
     internal fun readModernOrFallback(
         read: () -> SoftApConfiguration?,

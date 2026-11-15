@@ -982,6 +982,8 @@
     <string name="settings_auto_car_hotspot_system_description">Accende l’hotspot dell’auto salvato quando DiPlay si apre e prima di una connessione wireless. DiPlay richiede l’accesso “Modifica impostazioni di sistema” di Android; ADB non è necessario. Per avere l’hotspot dopo un riavvio completo, attiva anche l’apertura di DiPlay dopo l’avvio dell’auto. L’hotspot non viene spento automaticamente.</string>
     <string name="settings_car_hotspot_config_title">Importa i dati dell’hotspot dell’auto (sperimentale)</string>
     <string name="settings_car_hotspot_config_description">Non devi inserire nulla: le impostazioni dell’hotspot dell’auto vengono importate. Se l’auto non ne ha, DiPlay vi scrive i propri dati dopo la tua conferma; i dispositivi che usano questo hotspot potrebbero dover riconnettersi. Richiede ADB su Android 11 e successivi; non è disponibile da Android 8 a 10.</string>
+    <string name="settings_car_hotspot_config_description_zeekr">Nothing to type: if this build can read the car hotspot (platform-signed cars only), its name and password are filled in automatically. Otherwise enter them by hand below. The car hotspot is never changed.</string>
+    <string name="settings_car_hotspot_config_manual_fallback">Couldn\'t read the car hotspot automatically — enter the name and password below.</string>
     <string name="settings_car_hotspot_config_unsupported">L’importazione dei dati dell’hotspot dell’auto non è supportata da questa versione di Android.</string>
     <string name="settings_car_hotspot_config_written">La password dell’hotspot dell’auto ora è quella di DiPlay.</string>
     <string name="settings_car_hotspot_config_imported">Impostazioni dell’hotspot dell’auto importate.</string>

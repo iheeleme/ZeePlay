@@ -3157,6 +3157,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     // car's configuration cannot be read the write path runs instead, after a warning: it keeps the
     // car's name and password, or creates new details when nothing is saved on either side.
     private fun importCarHotspotConfig() {
+        if (BuildConfig.IS_ZEEKR) { importCarHotspotConfigDirect(); return }
         // The driver just turned the switch on, so the read may ask the car to approve DiPlay's ADB key,
         // as the other ADB switches do. Without asking it could only fail on a car that never saw the key.
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.N_MR1) {
@@ -3212,6 +3213,31 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
                             .show()
                     }
                 }
+            }
+        }, "diplay-hotspot-config-read").start()
+    }
+
+    // Zeekr: read the car hotspot directly (platform-signed builds only). No ADB and the car is never
+    // written to; when the read fails the driver enters the name and password by hand.
+    private fun importCarHotspotConfigDirect() {
+        Thread({
+            val read = CarHotspotConfigRead.readLocalOnly(applicationContext, log = { Log.i("DiPlay-Hotspot", it) })
+            Log.i("DiPlay-Hotspot", "car hotspot direct read: credentials=${read.credentials != null} reason=${read.reason}")
+            val saved = read.credentials
+            runOnUiThread {
+                if (saved != null) {
+                    AirPlayPersistence.saveManualHotspotSsid(applicationContext, saved.ssid)
+                    AirPlayPersistence.saveManualHotspotPassphrase(applicationContext, saved.passphrase)
+                    AirPlayPersistence.saveManualHotspotSecurity(applicationContext, saved.security)
+                    importedCarHotspot = saved
+                    carHotspotConfigStatus = null
+                    toast(getString(R.string.settings_car_hotspot_config_imported))
+                } else {
+                    // Not platform-signed on this car, or the hotspot is off: keep manual entry.
+                    CarHotspotSettings.setConfigWrite(this, false)
+                    carHotspotConfigStatus = R.string.settings_car_hotspot_config_manual_fallback
+                }
+                render()
             }
         }, "diplay-hotspot-config-read").start()
     }
@@ -3719,7 +3745,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
                 parent.addView(SettingsWidgets.createSwitchRow(
                     context = this,
                     label = getString(R.string.settings_car_hotspot_config_title),
-                    description = getString(R.string.settings_car_hotspot_config_description),
+                    description = getString(if (BuildConfig.IS_ZEEKR) R.string.settings_car_hotspot_config_description_zeekr else R.string.settings_car_hotspot_config_description),
                     labelSizeSp = 22f,
                     checked = CarHotspotSettings.configWrite(this), theme = SettingsTheme.card(palette),
                     contentDescription = getString(R.string.settings_car_hotspot_config_title),

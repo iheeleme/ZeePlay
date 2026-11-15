@@ -661,6 +661,8 @@
     <string name="auto_car_hotspot_description">DiPlay를 열 때 저장된 차량 핫스팟을 시작합니다. 이 기능을 켜면 ADB를 통해 필요한 권한을 자동으로 요청합니다. 차량 화면에 표시되는 요청을 허용하세요. 부팅 시 시작하려면 ‘차량 시동 후 열기’를 활성화하세요. 핫스팟 이름과 비밀번호를 유지하며 핫스팟을 끄지 않습니다.</string>
     <string name="settings_car_hotspot_config_title">차량 핫스팟 정보 가져오기 (실험 기능)</string>
     <string name="settings_car_hotspot_config_description">입력할 필요가 없습니다. 차량 핫스팟 설정을 가져옵니다. 차량에 설정이 없으면 확인 후 DiPlay 정보를 기록하며, 이 핫스팟을 사용하는 기기는 다시 연결해야 할 수 있습니다. Android 11 이상에서는 ADB가 필요하며 Android 8~10에서는 사용할 수 없습니다.</string>
+    <string name="settings_car_hotspot_config_description_zeekr">Nothing to type: if this build can read the car hotspot (platform-signed cars only), its name and password are filled in automatically. Otherwise enter them by hand below. The car hotspot is never changed.</string>
+    <string name="settings_car_hotspot_config_manual_fallback">Couldn\'t read the car hotspot automatically — enter the name and password below.</string>
     <string name="settings_car_hotspot_config_unsupported">이 Android 버전에서는 차량 핫스팟 정보를 가져올 수 없습니다.</string>
     <string name="settings_car_hotspot_config_written">이제 차량 핫스팟이 DiPlay 비밀번호를 사용합니다.</string>
     <string name="settings_car_hotspot_config_imported">차량 핫스팟 설정을 가져왔습니다.</string>

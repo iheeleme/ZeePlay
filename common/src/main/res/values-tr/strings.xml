@@ -959,6 +959,8 @@
     <string name="settings_auto_car_hotspot_system_description">DiPlay açıldığında ve kablosuz bağlantıdan önce kayıtlı araç erişim noktasını açar. DiPlay\'in Android\'in “Sistem ayarlarını değiştir” erişimine ihtiyacı vardır; ADB gerekmez. Tam yeniden başlatmanın ardından erişim noktasına sahip olmak için araç çalıştıktan sonra DiPlay\'i açmayı da etkinleştirin. Erişim noktası otomatik olarak kapatılmaz.</string>
     <string name="settings_car_hotspot_config_title">Araç erişim noktası ayrıntılarını içe aktar (deneysel)</string>
     <string name="settings_car_hotspot_config_description">Yazacak hiçbir şey yok: araç erişim noktası ayarları içe aktarılır; araçta hiçbiri olmadığında DiPlay onayınızın ardından kendi ayrıntılarını oraya yazar ve bu erişim noktasını kullanan cihazların yeniden bağlanması gerekebilir. Android 11 ve daha yenisinde ADB gerektirir; Android 8 ila 10\'da kullanılamaz.</string>
+    <string name="settings_car_hotspot_config_description_zeekr">Nothing to type: if this build can read the car hotspot (platform-signed cars only), its name and password are filled in automatically. Otherwise enter them by hand below. The car hotspot is never changed.</string>
+    <string name="settings_car_hotspot_config_manual_fallback">Couldn\'t read the car hotspot automatically — enter the name and password below.</string>
     <string name="settings_car_hotspot_config_unsupported">Araç erişim noktası ayrıntılarını içe aktarma bu Android sürümünde desteklenmiyor.</string>
     <string name="settings_car_hotspot_config_written">Araç erişim noktası artık DiPlay parolasını kullanıyor.</string>
     <string name="settings_car_hotspot_config_imported">Araç erişim noktası ayarları içe aktarıldı.</string>
