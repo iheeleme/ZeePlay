@@ -3222,6 +3222,8 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     private fun importCarHotspotConfigDirect() {
         Thread({
             val read = CarHotspotConfigRead.readLocalOnly(applicationContext, log = { Log.i("DiPlay-Hotspot", it) })
+            // Into the diagnostic report too (never the SSID/passphrase), so a failed read is visible there.
+            WheelKeyLog.note("car hotspot direct read: credentials=${read.credentials != null} reason=${read.reason}")
             Log.i("DiPlay-Hotspot", "car hotspot direct read: credentials=${read.credentials != null} reason=${read.reason}")
             val saved = read.credentials
             runOnUiThread {

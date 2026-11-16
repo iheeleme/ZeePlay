@@ -5,6 +5,7 @@ import android.net.wifi.SoftApConfiguration
 import android.net.wifi.WifiConfiguration
 import android.net.wifi.WifiManager
 import android.os.Build
+import android.os.IBinder
 import com.shilapi.xcertplay.adb.AdbKeys
 import com.shilapi.xcertplay.adb.LocalAdb
 import com.shilapi.xcertplay.orchestration.ManualHotspotSecurity
@@ -64,12 +65,64 @@ object CarHotspotConfigRead {
             return Outcome(reason = Reason.UNSUPPORTED_SDK)
         }
         if (sdk <= Build.VERSION_CODES.N_MR1) return readWithApp(context, log)
+        // The stock Zeekr receiver reads through the raw IWifiManager binder, and a platform-signed
+        // build is granted NETWORK_SETTINGS by signature, so this succeeds in-process where the public
+        // WifiManager wrapper returns null on this firmware (seen as configReadable=false). Try it first.
+        readViaBinder(log)?.let { return Outcome(it) }
         return readModernOrFallback({
             val wifi = context.applicationContext.getSystemService(WifiManager::class.java)
             WifiManager::class.java.getMethod("getSoftApConfiguration").invoke(wifi) as? SoftApConfiguration
         }, {
             Outcome(reason = Reason.UNAVAILABLE)
         }, log)
+    }
+
+    /**
+     * Reads the saved SoftApConfiguration through the raw IWifiManager binder, as the stock receiver
+     * and our own shell helper do: ServiceManager.getService("wifi") -> IWifiManager.Stub.asInterface
+     * -> getSoftApConfiguration(). In-process; works on a platform-signed build (hidden-API exempt),
+     * API 30+. Null on any failure so the caller keeps manual entry. The car is never written to.
+     */
+    internal fun readViaBinder(log: (String) -> Unit): CarHotspotSavedCredentials? = try {
+        val binder = Class.forName("android.os.ServiceManager")
+            .getMethod("getService", String::class.java).invoke(null, "wifi") as? IBinder
+        val wifi = binder?.let {
+            Class.forName("android.net.wifi.IWifiManager\$Stub")
+                .getMethod("asInterface", IBinder::class.java).invoke(null, it)
+        }
+        val config = wifi?.let {
+            it.javaClass.methods.firstOrNull { m -> m.name == "getSoftApConfiguration" && m.parameterTypes.isEmpty() }
+                ?.invoke(it)
+        }
+        if (config == null) {
+            log("car hotspot config: binder read returned no configuration")
+            null
+        } else {
+            val type = config.javaClass
+            val ssid = softApSsid(config, type)
+            val passphrase = type.methods.firstOrNull { it.name == "getPassphrase" }?.invoke(config) as? String ?: ""
+            val security = type.methods.firstOrNull { it.name == "getSecurityType" }?.invoke(config) as? Int
+            savedCredentials(ssid, passphrase, security?.let(::securityOf), log)
+        }
+    } catch (error: Throwable) {
+        // Never log framework reply text: OEM errors may include the AP credentials.
+        log("car hotspot config: binder read unavailable (${error.javaClass.simpleName})")
+        null
+    }
+
+    /** SSID off a SoftApConfiguration: getSsid() (API 30, may be quoted), else getWifiSsid() (API 31+). */
+    private fun softApSsid(config: Any, type: Class<*>): String? {
+        (type.methods.firstOrNull { it.name == "getSsid" && it.parameterTypes.isEmpty() }?.invoke(config) as? String)
+            ?.removeSurrounding("\"")?.takeIf { it.isNotBlank() }?.let { return it }
+        return try {
+            val wifiSsid = type.methods.firstOrNull { it.name == "getWifiSsid" && it.parameterTypes.isEmpty() }?.invoke(config)
+                ?: return null
+            val bytes = wifiSsid.javaClass.methods
+                .firstOrNull { it.name == "getBytes" && it.parameterTypes.isEmpty() }?.invoke(wifiSsid) as? ByteArray
+            if (bytes != null) String(bytes, Charsets.UTF_8) else wifiSsid.toString().removeSurrounding("\"")
+        } catch (_: Throwable) {
+            null
+        }
     }
 
     /** Read locally first; permission/hidden-API failures retain the explicit ADB import path. */
