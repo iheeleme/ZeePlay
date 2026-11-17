@@ -55,7 +55,9 @@ class CarHotspotImportSaveTest {
         val dialog = editCredentials()
         descendants(dialog.window!!.decorView).filterIsInstance<EditText>().toList()[1].setText("87654321")
         save(dialog)
-        assertEquals(overwrite, shadowOf(ShadowAlertDialog.getLatestAlertDialog()).title)
+        val title = shadowOf(ShadowAlertDialog.getLatestAlertDialog()).title
+        // The Zeekr edition only reads the car hotspot and never offers to overwrite it.
+        if (SharedEdition.ZEEKR) assertNotEquals(overwrite, title) else assertEquals(overwrite, title)
     }
 
     private fun editCredentials(): AlertDialog {

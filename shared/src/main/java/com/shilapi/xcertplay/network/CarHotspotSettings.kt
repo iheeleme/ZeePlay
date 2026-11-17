@@ -7,7 +7,9 @@ import com.shilapi.xcertplay.orchestration.WirelessHotspotMode
 object CarHotspotSettings {
     private fun prefs(context: Context) = context.getSharedPreferences("diplay_car_hotspot", Context.MODE_PRIVATE)
 
-    fun enabled(context: Context): Boolean = prefs(context).getBoolean("auto_enable", false)
+    // On by default on Zeekr (the car's vehicle service turns the hotspot on without extra access); opt-in elsewhere.
+    fun enabled(context: Context): Boolean =
+        prefs(context).getBoolean("auto_enable", com.shilapi.xcertplay.SharedEdition.ZEEKR)
 
     fun setEnabled(context: Context, enabled: Boolean) =
         prefs(context).edit().putBoolean("auto_enable", enabled).apply()

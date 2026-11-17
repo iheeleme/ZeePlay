@@ -27,9 +27,10 @@ class CarHotspotSetupTest {
     }
 
     @Test fun freshInstallAndExistingHotspotConfigurationRemainOptedOut() {
-        assertFalse(CarHotspotSettings.enabled(context))
+        // Opt-in everywhere except the Zeekr edition, which turns the car hotspot on by default.
+        assertEquals(SharedEdition.ZEEKR, CarHotspotSettings.enabled(context))
         configureHotspot()
-        assertFalse(eligible())
+        assertEquals(SharedEdition.ZEEKR, eligible())
     }
 
     @Test fun qualcommBydWithoutNavigationServicesCanReachHotspotSetup() {
