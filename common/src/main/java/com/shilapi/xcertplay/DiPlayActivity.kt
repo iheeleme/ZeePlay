@@ -4788,6 +4788,13 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             ZeekrHudSettings.layoutYPercent(this, hudCard),
         ) { it -> overlayOffsetLabel(it, getString(R.string.marker_up), getString(R.string.marker_down), 50) }
             .also { it.onSave = { v -> ZeekrHudSettings.setLayoutYPercent(this, hudCard, v) } })
+        // One tap back to where the stock navigation draws (all modes); the map's new size needs a reconnect.
+        card.addView(button(getString(R.string.settings_zeekr_hud_layout_stock), false) {
+            ZeekrHudSettings.resetLayoutToStock(this)
+            markReconnectNeeded()
+            render()
+        }, matchButton(12, 60))
+        card.addView(choiceNote(getString(R.string.settings_zeekr_hud_layout_stock_description)))
     }
 
     private fun nativeVehicleDataSettings(card: LinearLayout) {

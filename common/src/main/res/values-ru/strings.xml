@@ -984,6 +984,8 @@
     <string name="settings_zeekr_hud_size">HUD на лобовом · размер</string>
     <string name="settings_zeekr_hud_horizontal">HUD на лобовом · влево / вправо</string>
     <string name="settings_zeekr_hud_vertical">HUD на лобовом · вверх / вниз</string>
+    <string name="settings_zeekr_hud_layout_stock">Как у штатного навигатора</string>
+    <string name="settings_zeekr_hud_layout_stock_description">Возвращает карточку, карту и компактную стрелку в полосу, где рисует штатная навигация Zeekr (753×188, по центру). Размер и положение всех режимов сбрасываются.</string>
     <string name="settings_zeekr_hud_mode_card">карточка поворота</string>
     <string name="settings_zeekr_hud_mode_map">карта</string>
     <string name="settings_zeekr_hud_mode_compact">компактная стрелка</string>

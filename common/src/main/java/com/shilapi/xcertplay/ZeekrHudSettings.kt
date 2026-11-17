@@ -49,14 +49,39 @@ object ZeekrHudSettings {
     fun sizePercent(c: Context): Int = prefs(c).getInt(KEY_SIZE, 100)
     fun markerHorizontal(c: Context): Int = prefs(c).getInt(KEY_MARKER_H, 0)
     fun markerVertical(c: Context): Int = prefs(c).getInt(KEY_MARKER_V, 0)
+    /**
+     * Where the stock Zeekr navigation (com.zeekr.automap) draws its HUD map on the 1024x576 panel: a
+     * 753x188 band at (135, 193), i.e. centred (49.95% / 49.83%). Only this band is projected.
+     */
+    const val STOCK_REGION_LEFT = 135
+    const val STOCK_REGION_TOP = 193
+    const val STOCK_REGION_WIDTH = 753
+    const val STOCK_REGION_HEIGHT = 188
+
     // Placement is kept per HUD mode: the streams have different shapes, so each remembers its own
-    // size and position. The map and the compact tile default to the free square on the right.
+    // size and position. Defaults put each mode wholly inside the stock band, centred: the turn card
+    // (624x272) at 40% is 410x179, the map (240x224 stream) and the compact tile at 30% are 185x173
+    // and 173x173.
     private fun suffix(mode: Int) = when (mode) { MODE_CARD -> "_card"; MODE_COMPACT -> "_compact"; else -> "_map" }
+    private fun defaultSizePercent(mode: Int) = if (mode == MODE_CARD) 40 else 30
+    private const val DEFAULT_X_PERCENT = 50
+    private const val DEFAULT_Y_PERCENT = 50
     fun layoutSizePercent(c: Context, mode: Int): Int =
-        prefs(c).getInt(KEY_LAYOUT_SIZE + suffix(mode), if (mode == MODE_CARD) 100 else 40)
+        prefs(c).getInt(KEY_LAYOUT_SIZE + suffix(mode), defaultSizePercent(mode))
     fun layoutXPercent(c: Context, mode: Int): Int =
-        prefs(c).getInt(KEY_LAYOUT_X + suffix(mode), if (mode == MODE_CARD) 50 else 80)
-    fun layoutYPercent(c: Context, mode: Int): Int = prefs(c).getInt(KEY_LAYOUT_Y + suffix(mode), 50)
+        prefs(c).getInt(KEY_LAYOUT_X + suffix(mode), DEFAULT_X_PERCENT)
+    fun layoutYPercent(c: Context, mode: Int): Int = prefs(c).getInt(KEY_LAYOUT_Y + suffix(mode), DEFAULT_Y_PERCENT)
+
+    /** Back to the stock-navigation band for every mode (drops the driver's saved size/position). */
+    fun resetLayoutToStock(c: Context) {
+        val edit = prefs(c).edit()
+        for (mode in MODE_MAP..MODE_COMPACT) {
+            edit.remove(KEY_LAYOUT_SIZE + suffix(mode))
+            edit.remove(KEY_LAYOUT_X + suffix(mode))
+            edit.remove(KEY_LAYOUT_Y + suffix(mode))
+        }
+        edit.apply()
+    }
 
     /**
      * Pixel size advertised to the iPhone for the HUD map: the size it is shown at on the 1024x576

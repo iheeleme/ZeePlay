@@ -35,6 +35,7 @@ CarPlay display streams the iPhone offers.
   the iPhone renders a small map 1:1 instead of a full-size map scaled down
   (`60193046`).
 - Stop flooding the iPhone with a HUD `stopUI` every 2 s (`4342503b`).
+- Default placement matches the stock Zeekr navigation (`com.zeekr.automap`), which draws its HUD map in a 753×188 band at (135, 193) of the 1024×576 panel; every mode starts inside that band, and one button resets to it.
 
 ## Music (wireless CarPlay audio)
 

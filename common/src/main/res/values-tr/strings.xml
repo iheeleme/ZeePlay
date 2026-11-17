@@ -1072,6 +1072,8 @@
     <string name="settings_zeekr_hud_size">Windshield HUD · size</string>
     <string name="settings_zeekr_hud_horizontal">Windshield HUD · left / right</string>
     <string name="settings_zeekr_hud_vertical">Windshield HUD · up / down</string>
+    <string name="settings_zeekr_hud_layout_stock">Like the stock navigation</string>
+    <string name="settings_zeekr_hud_layout_stock_description">Puts the turn card, map and compact arrow back in the band where the stock Zeekr navigation draws on the HUD (753×188, centred). Your size and position for every mode are reset.</string>
     <string name="settings_zeekr_hud_mode_card">dönüş kartı</string>
     <string name="settings_zeekr_hud_mode_map">harita</string>
     <string name="settings_zeekr_hud_mode_compact">kompakt ok</string>
