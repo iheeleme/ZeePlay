@@ -90,12 +90,17 @@ object CarHotspotConfigRead {
             Class.forName("android.net.wifi.IWifiManager\$Stub")
                 .getMethod("asInterface", IBinder::class.java).invoke(null, it)
         }
-        val config = wifi?.let {
-            it.javaClass.methods.firstOrNull { m -> m.name == "getSoftApConfiguration" && m.parameterTypes.isEmpty() }
-                ?.invoke(it)
-        }
+        // Without the platform signature Android hides this method from reflection instead of throwing.
+        val method = wifi?.javaClass?.methods
+            ?.firstOrNull { m -> m.name == "getSoftApConfiguration" && m.parameterTypes.isEmpty() }
+        val config = method?.invoke(wifi)
         if (config == null) {
-            log("car hotspot config: binder read returned no configuration")
+            log("car hotspot config: binder read " + when {
+                binder == null -> "found no wifi service"
+                wifi == null -> "got no IWifiManager"
+                method == null -> "cannot see getSoftApConfiguration (hidden API: build not platform-signed for this device?)"
+                else -> "returned no configuration"
+            })
             null
         } else {
             val type = config.javaClass
