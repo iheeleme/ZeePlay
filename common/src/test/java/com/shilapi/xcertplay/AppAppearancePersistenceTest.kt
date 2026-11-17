@@ -18,7 +18,9 @@ class AppAppearancePersistenceTest {
     @Before fun clearPreferences() = prefs.edit().clear().apply()
 
     @Test fun freshInstallAndUnknownValuesDefaultToDark() {
-        assertEquals(AppAppearance.DARK, AirPlayPersistence.loadAppAppearance(context))
+        // A fresh Zeekr install follows the car (AUTO); an unknown saved value is dark in every edition.
+        val fresh = if (com.shilapi.xcertplay.host.BuildConfig.IS_ZEEKR) AppAppearance.AUTO else AppAppearance.DARK
+        assertEquals(fresh, AirPlayPersistence.loadAppAppearance(context))
         prefs.edit().putString("app_appearance", "future-value").apply()
         assertEquals(AppAppearance.DARK, AirPlayPersistence.loadAppAppearance(context))
     }

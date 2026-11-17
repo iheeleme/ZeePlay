@@ -65,6 +65,7 @@ Only in the `diplay.edition=zeekr` build (standard/BYD defaults are unchanged); 
 saved are kept.
 
 - HUD content: compact arrow; cluster map, media integration, HUD and dark HUD on.
+- App theme follows the car's day/night (Auto); CarPlay itself already follows the system by default.
 - Car Bluetooth off during wireless CarPlay.
 - The car's status bar and dock stay visible over CarPlay.
 - Battery and wheel speed / gear sent to the iPhone.

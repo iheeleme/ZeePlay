@@ -652,9 +652,12 @@ object AirPlayPersistence {
             .putInt(KEY_AMBIENT_LUX_THRESHOLD, threshold.lux).apply()
     }
 
-    fun loadAppAppearance(context: Context): AppAppearance = AppAppearance.fromKey(
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY_APP_APPEARANCE, null),
-    )
+    // Nothing saved yet: the Zeekr edition follows the car's day/night (AUTO), others start dark.
+    // An unknown saved value still falls back to dark.
+    fun loadAppAppearance(context: Context): AppAppearance =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY_APP_APPEARANCE, null)
+            ?.let(AppAppearance::fromKey)
+            ?: if (com.shilapi.xcertplay.host.BuildConfig.IS_ZEEKR) AppAppearance.AUTO else AppAppearance.DARK
 
     fun saveAppAppearance(context: Context, appearance: AppAppearance) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
