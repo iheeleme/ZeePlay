@@ -133,8 +133,13 @@ class ZeekrHudHost(private val activity: Activity, private val sink: AndroidMedi
     private fun onSurface(s: Surface?) {
         val prev = surface
         surface = s
-        for (type in screenTypes()) {
-            if (s != null) sink.setSurface(type, s) else if (prev != null) sink.clearSurface(type, prev)
+        if (s != null) {
+            for (type in screenTypes()) sink.setSurface(type, s)
+        } else if (prev != null) {
+            // Release the gone surface from both HUD streams, not only the current mode's: switching to the
+            // compact tile hides the SurfaceView after the mode changed, and a card/map stream left holding
+            // the destroyed surface kept failing to configure its decoder and requesting keyframes.
+            for (type in ALL_HUD_STREAM_TYPES) sink.clearSurface(type, prev)
         }
     }
 
@@ -144,5 +149,9 @@ class ZeekrHudHost(private val activity: Activity, private val sink: AndroidMedi
         else if (ZeekrHudSettings.mapEnabled(activity)) add(AirPlayInfoPlist.STREAM_TYPE_MAP_SCREEN)
     }
 
-    companion object { private const val TAG = "Zeekr-HUD" }
+    companion object {
+        private const val TAG = "Zeekr-HUD"
+        private val ALL_HUD_STREAM_TYPES =
+            listOf(AirPlayInfoPlist.STREAM_TYPE_CARD_SCREEN, AirPlayInfoPlist.STREAM_TYPE_MAP_SCREEN)
+    }
 }

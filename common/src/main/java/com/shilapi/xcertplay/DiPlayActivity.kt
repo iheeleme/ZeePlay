@@ -3221,7 +3221,10 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     // written to; when the read fails the driver enters the name and password by hand.
     private fun importCarHotspotConfigDirect() {
         Thread({
-            val read = CarHotspotConfigRead.readLocalOnly(applicationContext, log = { Log.i("DiPlay-Hotspot", it) })
+            val read = CarHotspotConfigRead.readLocalOnly(applicationContext, log = {
+                Log.i("DiPlay-Hotspot", it)
+                WheelKeyLog.note(it)
+            })
             // Into the diagnostic report too (never the SSID/passphrase), so a failed read is visible there.
             WheelKeyLog.note("car hotspot direct read: credentials=${read.credentials != null} reason=${read.reason}")
             Log.i("DiPlay-Hotspot", "car hotspot direct read: credentials=${read.credentials != null} reason=${read.reason}")

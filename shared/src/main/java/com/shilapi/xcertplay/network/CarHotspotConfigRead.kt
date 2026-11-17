@@ -106,8 +106,14 @@ object CarHotspotConfigRead {
         }
     } catch (error: Throwable) {
         // Never log framework reply text: OEM errors may include the AP credentials.
-        log("car hotspot config: binder read unavailable (${error.javaClass.simpleName})")
+        log("car hotspot config: binder read unavailable (${causeName(error)})")
         null
+    }
+
+    /** The real failure behind a reflective call (e.g. SecurityException), by class name only. */
+    private fun causeName(error: Throwable): String {
+        val cause = (error as? java.lang.reflect.InvocationTargetException)?.targetException ?: error
+        return cause.javaClass.simpleName
     }
 
     /** SSID off a SoftApConfiguration: getSsid() (API 30, may be quoted), else getWifiSsid() (API 31+). */
@@ -137,7 +143,7 @@ object CarHotspotConfigRead {
                 config?.securityType?.let(::securityOf), log)
         } catch (error: Exception) {
             // Never log framework reply text here: OEM errors may include the AP credentials.
-            log("car hotspot config: local read unavailable (${error.javaClass.simpleName})")
+            log("car hotspot config: local read unavailable (${causeName(error)})")
             null
         }
         return if (credentials != null) Outcome(credentials) else fallback()
