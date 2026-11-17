@@ -69,6 +69,9 @@ class CarPlayHostSettingsTest {
             .set(CarPlayBackgroundSession, activity)
         AirPlayPersistence.saveMfiTarget(activity, MfiTarget.USB_CH341)
         AirPlayPersistence.saveWirelessHotspotMode(activity, WirelessHotspotMode.WIFI_P2P)
+        // These tests start from hidden bars; the Zeekr edition shows them by default.
+        AirPlayPersistence.saveHideTopBar(activity, true)
+        AirPlayPersistence.saveHideBottomBar(activity, true)
         invoke("loadPersistedSettings")
         invoke("buildContentView")
     }

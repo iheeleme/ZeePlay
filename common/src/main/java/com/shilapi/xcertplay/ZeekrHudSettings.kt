@@ -36,11 +36,11 @@ object ZeekrHudSettings {
 
     private fun prefs(c: Context) = c.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
-    /** The HUD content; installs from before the mode setting keep their turn-card choice. */
+    /** The HUD content, compact arrow by default; installs from before the mode setting keep a turn-card choice. */
     fun mode(c: Context): Int {
         val p = prefs(c)
-        if (p.contains(KEY_MODE)) return p.getInt(KEY_MODE, MODE_MAP).coerceIn(MODE_MAP, MODE_COMPACT)
-        return if (p.getBoolean(KEY_CARD, false)) MODE_CARD else MODE_MAP
+        if (p.contains(KEY_MODE)) return p.getInt(KEY_MODE, MODE_COMPACT).coerceIn(MODE_MAP, MODE_COMPACT)
+        return if (p.getBoolean(KEY_CARD, false)) MODE_CARD else MODE_COMPACT
     }
     fun setMode(c: Context, mode: Int) = prefs(c).edit().putInt(KEY_MODE, mode.coerceIn(MODE_MAP, MODE_COMPACT)).apply()
     fun mapEnabled(c: Context): Boolean = mode(c) == MODE_MAP && prefs(c).getBoolean(KEY_MAP, true)

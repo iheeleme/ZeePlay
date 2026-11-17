@@ -59,6 +59,19 @@ seconds.
   car — no ADB, and the car hotspot is never written to (`fd3c9be0`). See
   [zeekr-wireless-hotspot.md](zeekr-wireless-hotspot.md) for the mechanism.
 
+## Zeekr edition defaults
+
+Only in the `diplay.edition=zeekr` build (standard/BYD defaults are unchanged); settings a driver already
+saved are kept.
+
+- HUD content: compact arrow; cluster map, media integration, HUD and dark HUD on.
+- Car Bluetooth off during wireless CarPlay.
+- The car's status bar and dock stay visible over CarPlay.
+- Battery and wheel speed / gear sent to the iPhone.
+- Car hotspot read automatically before connecting and when the app returns (direct read, platform-signed
+  builds); the car's hotspot is never written to on Zeekr, and without the signature the hand-entered
+  details are used.
+
 ## Diagnostics and build
 
 - Carry HUD, media and the modes/resources layout into the diagnostic report

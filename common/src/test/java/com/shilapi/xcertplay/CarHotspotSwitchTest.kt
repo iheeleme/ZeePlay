@@ -177,8 +177,9 @@ class CarHotspotSwitchTest {
 
     @Test fun vehicleControlsAreNotDuplicatedInTheHotspotPermissionCard() {
         assertEquals(1, switches(controls).size)
-        assertFalse(BydOutputSettings.batteryToIphone(activity))
-        assertFalse(BydOutputSettings.wheelSpeedToIphone(activity))
+        // Untouched by this card: still the edition defaults (Zeekr sends telemetry by default).
+        assertEquals(SharedEdition.ZEEKR, BydOutputSettings.batteryToIphone(activity))
+        assertEquals(SharedEdition.ZEEKR, BydOutputSettings.wheelSpeedToIphone(activity))
         assertFalse(BydOutputSettings.videoWhileParked(activity))
         assertTrue(Grant.requested.isEmpty())
     }

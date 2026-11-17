@@ -62,7 +62,9 @@ object BydOutputSettings {
         BydAmapAdapter.find { packageName -> installed(context, packageName) } == BydAmapAdapter.DILINK3
 
     /** Tell the iPhone the car's charge and range (needs ADB over network); applies on the next connection. */
-    fun batteryToIphone(context: Context): Boolean = prefs(context).getBoolean(KEY_BATTERY_TO_IPHONE, false)
+    // Zeekr edition sends the car telemetry to the iPhone by default; other editions keep it opt-in.
+    fun batteryToIphone(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_BATTERY_TO_IPHONE, com.shilapi.xcertplay.SharedEdition.ZEEKR)
 
     fun setBatteryToIphone(context: Context, enabled: Boolean) {
         prefs(context).edit().putBoolean(KEY_BATTERY_TO_IPHONE, enabled).commit()
@@ -83,7 +85,8 @@ object BydOutputSettings {
     }
 
     /** Send wheel speed and gear with the car's GPS (needs ADB over network); applies on the next connection. */
-    fun wheelSpeedToIphone(context: Context): Boolean = prefs(context).getBoolean(KEY_WHEEL_SPEED_TO_IPHONE, false)
+    fun wheelSpeedToIphone(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_WHEEL_SPEED_TO_IPHONE, com.shilapi.xcertplay.SharedEdition.ZEEKR)
 
     fun setWheelSpeedToIphone(context: Context, enabled: Boolean) {
         prefs(context).edit().putBoolean(KEY_WHEEL_SPEED_TO_IPHONE, enabled).commit()

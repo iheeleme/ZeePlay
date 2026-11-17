@@ -1012,6 +1012,8 @@ open class CarPlayHostActivity : ComponentActivity() {
         existingWifiSsid = AirPlayPersistence.loadExistingWifiSsid(this)
         existingWifiPassphrase = AirPlayPersistence.loadExistingWifiPassphrase(this)
         existingWifiInterface = AirPlayPersistence.loadExistingWifiInterface(this)
+        // Zeekr: refresh the saved hotspot details from the car first (direct read, throttled; no-op elsewhere).
+        ZeekrHotspotAutoRead.refresh(this)
         manualHotspotSsid = AirPlayPersistence.loadManualHotspotSsid(this)
         manualHotspotPassphrase = AirPlayPersistence.loadManualHotspotPassphrase(this)
         manualHotspotBand = AirPlayPersistence.loadManualHotspotBand(this)

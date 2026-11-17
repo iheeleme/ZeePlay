@@ -552,7 +552,8 @@ object AirPlayPersistence {
 
     fun loadBtSuspendDuringCarplay(context: Context): Boolean =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-            .getBoolean(KEY_BT_SUSPEND_DURING_CARPLAY, false)
+            // On by default on Zeekr: the car's A2DP sink otherwise pauses the iPhone during CarPlay.
+            .getBoolean(KEY_BT_SUSPEND_DURING_CARPLAY, com.shilapi.xcertplay.host.BuildConfig.IS_ZEEKR)
 
     fun loadHideBydCallPopup(context: Context): Boolean =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -1394,7 +1395,8 @@ object AirPlayPersistence {
 
     fun loadHideTopBar(context: Context): Boolean =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-            .getBoolean(KEY_HIDE_TOP_BAR, true)
+            // Zeekr keeps the car's status bar and dock visible by default.
+            .getBoolean(KEY_HIDE_TOP_BAR, !com.shilapi.xcertplay.host.BuildConfig.IS_ZEEKR)
 
     fun saveHideTopBar(context: Context, hide: Boolean) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
@@ -1404,7 +1406,7 @@ object AirPlayPersistence {
 
     fun loadHideBottomBar(context: Context): Boolean =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-            .getBoolean(KEY_HIDE_BOTTOM_BAR, true)
+            .getBoolean(KEY_HIDE_BOTTOM_BAR, !com.shilapi.xcertplay.host.BuildConfig.IS_ZEEKR)
 
     fun saveHideBottomBar(context: Context, hide: Boolean) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()

@@ -529,6 +529,9 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     override fun onResume() {
         super.onResume()
         WheelKeyService.restoreIfNeeded(this)
+        if (BuildConfig.IS_ZEEKR) Thread({
+            if (ZeekrHotspotAutoRead.refresh(this)) runOnUiThread { if (!isDestroyed) render() }
+        }, "diplay-hotspot-auto-read").start()
         applyFullscreenMode()
         // Returning from another activity can bring the head unit's own density back.
         if (enforceInterfaceSize()) render()
@@ -3938,7 +3941,8 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         AirPlayPersistence.saveManualHotspotInterface(this, interfaceName)
         markReconnectNeeded()
         val fromCar = importedCarHotspot == CarHotspotSavedCredentials(ssid, password, security)
-        if (CarHotspotConfigWrite.supported() && CarHotspotSettings.configWrite(this) && !fromCar) {
+        // Zeekr never writes the car's hotspot: there the switch only reads it.
+        if (!BuildConfig.IS_ZEEKR && CarHotspotConfigWrite.supported() && CarHotspotSettings.configWrite(this) && !fromCar) {
             AlertDialog.Builder(this)
                 .setTitle(getString(R.string.settings_car_hotspot_config_dialog_title))
                 .setMessage(getString(R.string.settings_car_hotspot_config_dialog_save_message))
