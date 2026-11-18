@@ -65,13 +65,28 @@ internal class ZeekrMediaSource(
     private val autoSelect = ZeekrInteractionSettings.autoSelect(context)
     private val controlsEnabled = ZeekrInteractionSettings.controlsEnabled(context)
     private var yielded = false
+    private var lastFocusState: String? = null
     private val folder = File(context.cacheDir, "zeekr-artwork/${UUID.randomUUID()}")
+    /**
+     * Hold the media-center focus on a steady 1 s tick, independent of the CarPlay now-playing
+     * "playing" flag (which can stay false while audio streams). Mirrors the working media bridge,
+     * which holds focus from the start and re-acquires continuously; [ensureFocusHeld] no-ops when we
+     * already own the source or the car revoked it ([yielded]).
+     */
+    private val focusTick = object : Runnable {
+        override fun run() {
+            if (closed || token == null || media == null) return
+            safely("focus-hold") { ensureFocusHeld() }
+            if (!closed && token != null && media != null) worker.postDelayed(this, 1000L)
+        }
+    }
     private val progressTick = object : Runnable {
         override fun run() {
             if (closed || token == null || media == null || !snapshot.info.playing) return
             safely("progress") {
                 val current = snapshot
                 mediaCommand(11) { it.writeLong(position(current.info, current.positionAt)) }
+                ensureFocusHeld()
                 worker.postDelayed(this, 1000L)
             }
         }
@@ -178,6 +193,7 @@ internal class ZeekrMediaSource(
         val old = snapshot
         val anchor = if (old.info.elapsedMillis != info.elapsedMillis || old.info.playing != info.playing)
             SystemClock.elapsedRealtime() else old.positionAt
+        if (old.info.playing != info.playing) note("nowplaying playing=${info.playing}")
         snapshot = Snapshot(info, artwork, anchor)
         if (bound || directBound) queuePublish()
     }
@@ -220,6 +236,7 @@ internal class ZeekrMediaSource(
 
     private fun invalidate() {
         worker.removeCallbacks(progressTick)
+        worker.removeCallbacks(focusTick)
         cancelInitWait()
         initAttempts = 0
         initOutstanding = false
@@ -262,6 +279,7 @@ internal class ZeekrMediaSource(
                             registrationOwner = null
                             registered = false; token = null; media = null; previous = null
                             worker.removeCallbacks(progressTick)
+                            worker.removeCallbacks(focusTick)
                             initDeadline?.let { worker.removeCallbacks(it) }
                             initDeadline = null
                             initOutstanding = false
@@ -419,6 +437,13 @@ internal class ZeekrMediaSource(
         if (token == null || media == null) return@safely
         mediaCommand(8) { it.writeIntArray(intArrayOf(ZeekrMediaProtocol.SOURCE)) }
         note("source registered")
+        // Take the media-center focus from the start like the working bridge, then keep it on a
+        // steady tick: the CarPlay now-playing "playing" flag is unreliable, so progressTick alone
+        // (which only runs while playing) never asserted focus. CoreService re-registers about every
+        // 30 s, so a source the car explicitly took away ([yielded]) is not grabbed back here.
+        if (!yielded) claimSource()
+        worker.removeCallbacks(focusTick)
+        worker.postDelayed(focusTick, 1000L)
         publish()
     }
 
@@ -433,21 +458,39 @@ internal class ZeekrMediaSource(
         return sent
     }
 
+    /** requestPlay(6) assigns the media focus; updateCurrentSourceType(9) then declares us (needs focus). */
     private fun claimSource() {
         mediaCommand(6)
         mediaCommand(9) { it.writeInt(ZeekrMediaProtocol.SOURCE) }
-        safely("query source focus") {
-            val service = media ?: return@safely
-            val identity = token ?: return@safely
-            val selected = ZeekrMediaProtocol.call(service, ZeekrMediaProtocol.MEDIA, 44,
-                { it.writeStrongBinder(identity) }) { it.readString() }
-            val state = when {
-                selected.isNullOrEmpty() -> "empty"
-                selected == context.packageName || selected.startsWith("${context.packageName}:") -> "self"
-                else -> "other"
-            }
-            note("source claim result focus=$state")
+    }
+
+    /** Query who the media center currently has selected: self / other / empty. */
+    private fun queryFocusState(): String = runCatching {
+        val service = media ?: return "unknown"
+        val identity = token ?: return "unknown"
+        val selected = ZeekrMediaProtocol.call(service, ZeekrMediaProtocol.MEDIA, 44,
+            { it.writeStrongBinder(identity) }) { it.readString() }
+        when {
+            selected.isNullOrEmpty() -> "empty"
+            selected == context.packageName || selected.startsWith("${context.packageName}:") -> "self"
+            else -> "other"
         }
+    }.getOrDefault("unknown")
+
+    /**
+     * Hold the media focus like the working media bridge: re-acquire on every PLAYING tick instead of
+     * only on the rising edge. The CarPlay media stream flaps play/pause, and the car's own source UI
+     * can steal selection, so a single requestPlay does not stick (focus=empty). We re-claim whenever
+     * we are not the selected source, unless the car explicitly revoked focus (yielded via focusLost).
+     */
+    private fun ensureFocusHeld() {
+        if (yielded) return
+        val state = queryFocusState()
+        // Nobody selected: take it. Another source selected: only fight for it while CarPlay plays,
+        // so the steady focusTick never overrides a source the driver picked (radio, USB, ...).
+        val reclaim = state == "empty" || (state == "other" && snapshot.info.playing)
+        if (reclaim) runCatching { claimSource() }
+        if (state != lastFocusState) { lastFocusState = state; note("source focus=$state") }
     }
 
     private fun queuePublish() {

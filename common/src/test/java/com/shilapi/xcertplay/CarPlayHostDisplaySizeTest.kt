@@ -52,6 +52,9 @@ class CarPlayHostDisplaySizeTest {
         AirPlayPersistence.saveHarmanFullscreen(activity, false)
         // Source-only tests have no provisioned local authentication identity.
         AirPlayPersistence.saveMfiTarget(activity, MfiTarget.USB_CH341)
+        // These tests start from hidden bars; the Zeekr edition shows them by default.
+        AirPlayPersistence.saveHideTopBar(activity, true)
+        AirPlayPersistence.saveHideBottomBar(activity, true)
         // Exercise host startup without launching vendor-service workers or real transports.
         controllerConstruction = mockConstruction(CarPlayController::class.java) { controller, _ ->
             org.mockito.Mockito.`when`(controller.nowPlayingSnapshot()).thenReturn(CarPlayNowPlaying())

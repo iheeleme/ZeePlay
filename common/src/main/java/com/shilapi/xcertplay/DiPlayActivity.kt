@@ -529,6 +529,9 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     override fun onResume() {
         super.onResume()
         WheelKeyService.restoreIfNeeded(this)
+        if (BuildConfig.IS_ZEEKR) Thread({
+            if (ZeekrHotspotAutoRead.refresh(this)) runOnUiThread { if (!isDestroyed) render() }
+        }, "diplay-hotspot-auto-read").start()
         applyFullscreenMode()
         // Returning from another activity can bring the head unit's own density back.
         if (enforceInterfaceSize()) render()
@@ -3157,6 +3160,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     // car's configuration cannot be read the write path runs instead, after a warning: it keeps the
     // car's name and password, or creates new details when nothing is saved on either side.
     private fun importCarHotspotConfig() {
+        if (BuildConfig.IS_ZEEKR) { importCarHotspotConfigDirect(); return }
         // The driver just turned the switch on, so the read may ask the car to approve DiPlay's ADB key,
         // as the other ADB switches do. Without asking it could only fail on a car that never saw the key.
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.N_MR1) {
@@ -3212,6 +3216,36 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
                             .show()
                     }
                 }
+            }
+        }, "diplay-hotspot-config-read").start()
+    }
+
+    // Zeekr: read the car hotspot directly (platform-signed builds only). No ADB and the car is never
+    // written to; when the read fails the driver enters the name and password by hand.
+    private fun importCarHotspotConfigDirect() {
+        Thread({
+            val read = CarHotspotConfigRead.readLocalOnly(applicationContext, log = {
+                Log.i("DiPlay-Hotspot", it)
+                WheelKeyLog.note(it)
+            })
+            // Into the diagnostic report too (never the SSID/passphrase), so a failed read is visible there.
+            WheelKeyLog.note("car hotspot direct read: credentials=${read.credentials != null} reason=${read.reason}")
+            Log.i("DiPlay-Hotspot", "car hotspot direct read: credentials=${read.credentials != null} reason=${read.reason}")
+            val saved = read.credentials
+            runOnUiThread {
+                if (saved != null) {
+                    AirPlayPersistence.saveManualHotspotSsid(applicationContext, saved.ssid)
+                    AirPlayPersistence.saveManualHotspotPassphrase(applicationContext, saved.passphrase)
+                    AirPlayPersistence.saveManualHotspotSecurity(applicationContext, saved.security)
+                    importedCarHotspot = saved
+                    carHotspotConfigStatus = null
+                    toast(getString(R.string.settings_car_hotspot_config_imported))
+                } else {
+                    // Not platform-signed on this car, or the hotspot is off: keep manual entry.
+                    CarHotspotSettings.setConfigWrite(this, false)
+                    carHotspotConfigStatus = R.string.settings_car_hotspot_config_manual_fallback
+                }
+                render()
             }
         }, "diplay-hotspot-config-read").start()
     }
@@ -3719,7 +3753,7 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
                 parent.addView(SettingsWidgets.createSwitchRow(
                     context = this,
                     label = getString(R.string.settings_car_hotspot_config_title),
-                    description = getString(R.string.settings_car_hotspot_config_description),
+                    description = getString(if (BuildConfig.IS_ZEEKR) R.string.settings_car_hotspot_config_description_zeekr else R.string.settings_car_hotspot_config_description),
                     labelSizeSp = 22f,
                     checked = CarHotspotSettings.configWrite(this), theme = SettingsTheme.card(palette),
                     contentDescription = getString(R.string.settings_car_hotspot_config_title),
@@ -3907,7 +3941,8 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         AirPlayPersistence.saveManualHotspotInterface(this, interfaceName)
         markReconnectNeeded()
         val fromCar = importedCarHotspot == CarHotspotSavedCredentials(ssid, password, security)
-        if (CarHotspotConfigWrite.supported() && CarHotspotSettings.configWrite(this) && !fromCar) {
+        // Zeekr never writes the car's hotspot: there the switch only reads it.
+        if (!BuildConfig.IS_ZEEKR && CarHotspotConfigWrite.supported() && CarHotspotSettings.configWrite(this) && !fromCar) {
             AlertDialog.Builder(this)
                 .setTitle(getString(R.string.settings_car_hotspot_config_dialog_title))
                 .setMessage(getString(R.string.settings_car_hotspot_config_dialog_save_message))
@@ -4694,6 +4729,76 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             ZeekrInteractionSettings.setControlsEnabled(this, it)
             markReconnectNeeded()
         }
+        toggle(card, getString(R.string.carplay_map_on_instrument_cluster_experimental),
+            getString(R.string.settings_zeekr_cluster_map_description),
+            AirPlayPersistence.loadClusterMapEnabled(this)) {
+            AirPlayPersistence.saveClusterMapEnabled(this, it)
+            markReconnectNeeded()
+        }
+        toggle(card, getString(R.string.settings_zeekr_hud), getString(R.string.settings_zeekr_hud_description),
+            ZeekrInteractionSettings.hudEnabled(this)) {
+            ZeekrInteractionSettings.setHudEnabled(this, it)
+            markReconnectNeeded()
+        }
+        // Map / turn card are CarPlay streams (reconnect to change); the compact tile is ZeePlay's own.
+        choice(card, getString(R.string.settings_zeekr_hud_content), listOf(
+            getString(R.string.settings_zeekr_hud_content_map),
+            getString(R.string.settings_zeekr_hud_content_card),
+            getString(R.string.settings_zeekr_hud_content_compact),
+        ), ZeekrHudSettings.mode(this), reconnects = false) {
+            ZeekrHudSettings.setMode(this, it)
+            markReconnectNeeded()
+            render() // the placement sliders below switch to the chosen mode
+        }
+        card.addView(choiceNote(getString(R.string.settings_zeekr_hud_content_description)))
+        // Same persistence as the BYD ADB control (that card is not shown in the zeekr edition).
+        toggle(card, getString(R.string.settings_zeekr_bt_pause), getString(R.string.settings_zeekr_bt_pause_description),
+            AirPlayPersistence.loadBtSuspendDuringCarplay(this)) {
+            AirPlayPersistence.saveBtSuspendDuringCarplay(this, it)
+            markReconnectNeeded()
+        }
+        toggle(card, getString(R.string.settings_zeekr_hud_dark), getString(R.string.settings_zeekr_hud_dark_description),
+            ZeekrHudSettings.darkEnabled(this)) {
+            ZeekrHudSettings.setDarkEnabled(this, it)
+            markReconnectNeeded()
+        }
+        // Live: the HUD host re-reads these every tick, so the driver can tune them while looking at the glass.
+        // They edit the placement of the mode shown now (turn card or map); each mode keeps its own.
+        val hudCard = ZeekrHudSettings.mode(this)
+        val hudMode = getString(when (hudCard) {
+            ZeekrHudSettings.MODE_CARD -> R.string.settings_zeekr_hud_mode_card
+            ZeekrHudSettings.MODE_COMPACT -> R.string.settings_zeekr_hud_mode_compact
+            else -> R.string.settings_zeekr_hud_mode_map
+        })
+        card.addView(overlaySliderRow(
+            "${getString(R.string.settings_zeekr_hud_size)} ($hudMode)",
+            ZeekrHudSettings.layoutSizePercents,
+            ZeekrHudSettings.layoutSizePercent(this, hudCard),
+        ) { it -> getString(R.string.turn_card_overlay_size_option, it) }
+            .also {
+                it.onSave = { v -> ZeekrHudSettings.setLayoutSizePercent(this, hudCard, v) }
+                // The map is rendered by the iPhone at the size shown, so a new size needs a reconnect.
+                if (hudCard == ZeekrHudSettings.MODE_MAP) it.onCommit = { markReconnectNeeded() }
+            })
+        card.addView(overlaySliderRow(
+            "${getString(R.string.settings_zeekr_hud_horizontal)} ($hudMode)",
+            ZeekrHudSettings.layoutPositionPercents,
+            ZeekrHudSettings.layoutXPercent(this, hudCard),
+        ) { it -> overlayOffsetLabel(it, getString(R.string.marker_left), getString(R.string.marker_right), 50) }
+            .also { it.onSave = { v -> ZeekrHudSettings.setLayoutXPercent(this, hudCard, v) } })
+        card.addView(overlaySliderRow(
+            "${getString(R.string.settings_zeekr_hud_vertical)} ($hudMode)",
+            ZeekrHudSettings.layoutPositionPercents,
+            ZeekrHudSettings.layoutYPercent(this, hudCard),
+        ) { it -> overlayOffsetLabel(it, getString(R.string.marker_up), getString(R.string.marker_down), 50) }
+            .also { it.onSave = { v -> ZeekrHudSettings.setLayoutYPercent(this, hudCard, v) } })
+        // One tap back to where the stock navigation draws (all modes); the map's new size needs a reconnect.
+        card.addView(button(getString(R.string.settings_zeekr_hud_layout_stock), false) {
+            ZeekrHudSettings.resetLayoutToStock(this)
+            markReconnectNeeded()
+            render()
+        }, matchButton(12, 60))
+        card.addView(choiceNote(getString(R.string.settings_zeekr_hud_layout_stock_description)))
     }
 
     private fun nativeVehicleDataSettings(card: LinearLayout) {

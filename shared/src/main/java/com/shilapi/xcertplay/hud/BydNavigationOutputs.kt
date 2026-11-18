@@ -115,6 +115,9 @@ object BydNavigationOutputs {
         if (change != BydHudRouteChange.NONE) refreshTurnOverlay()
     }
 
+    /** The next-turn state right now, whether or not a listener is attached (HUD host polls it). */
+    fun turnGuidanceNow(): ClusterTurnGuidance? = currentOverlay()
+
     /** Called every second while the presentation owner lives, even without incoming frames. */
     fun refreshTurnOverlay() {
         val next = synchronized(overlayLock) {

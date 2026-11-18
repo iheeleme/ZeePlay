@@ -627,6 +627,8 @@
     <string name="auto_car_hotspot_description">DiPlay 启动时开启车机热点。打开开关会自动通过 ADB 申请所需权限，请允许车机上的授权提示。配合“车辆启动后打开”可随开机启动。保留热点名称和密码，不会自动关闭热点。</string>
     <string name="settings_car_hotspot_config_title">导入车机热点详情（实验性）</string>
     <string name="settings_car_hotspot_config_description">无需手动输入热点信息，尝试导入车机热点信息；车机没有热点信息时，在用户确认后由 DiPlay 写入自己的热点详情，使用此车载热点的设备可能需要重连。Android 11 及以上需要 ADB；Android 8 到 10 不支持。</string>
+    <string name="settings_car_hotspot_config_description_zeekr">Nothing to type: if this build can read the car hotspot (platform-signed cars only), its name and password are filled in automatically. Otherwise enter them by hand below. The car hotspot is never changed.</string>
+    <string name="settings_car_hotspot_config_manual_fallback">Couldn\'t read the car hotspot automatically — enter the name and password below.</string>
     <string name="settings_car_hotspot_config_unsupported">此 Android 版本不支持导入车机热点详情。</string>
     <string name="settings_car_hotspot_config_written">车机热点已使用 DiPlay 的密码。</string>
     <string name="settings_car_hotspot_config_imported">已导入车机热点设置。</string>
@@ -1031,4 +1033,26 @@
     <string name="settings_zeekr_controls_description">使用车机和支持的方向盘按键控制音乐。下次连接生效。</string>
     <string name="settings_zeekr_gesture_hint">选择不会与车机系统冲突的手势。</string>
     <string name="settings_zeekr_window_hint">在应用窗口中打开 CarPlay，适配桌面卡片和分屏。下次打开 CarPlay 时生效。</string>
+    <string name="settings_zeekr_hud">Cluster + windshield HUD</string>
+    <string name="settings_zeekr_hud_description">Show the next turn — maneuver, distance and road — on the instrument cluster and the windshield head-up display while navigating.</string>
+    <string name="settings_zeekr_hud_card">Turn card on windshield</string>
+    <string name="settings_zeekr_hud_card_description">Show CarPlay\'s own turn card (maneuver arrow, distance and road) on the windshield head-up display instead of the moving map while navigating.</string>
+    <string name="settings_zeekr_bt_pause">Turn off car Bluetooth during CarPlay</string>
+    <string name="settings_zeekr_bt_pause_description">The car Bluetooth music player pauses the iPhone whenever it plays through CarPlay. While wireless CarPlay runs, turn the car Bluetooth off about 10 s after connecting and back on when CarPlay ends or before the next connection. Other Bluetooth devices disconnect meanwhile; CarPlay calls keep working. Pairing is not touched. Applies at the next connection.</string>
+    <string name="settings_zeekr_hud_dark">Dark windshield HUD（实验性）</string>
+    <string name="settings_zeekr_hud_dark_description">Asks CarPlay to draw the windshield map and turn card in dark mode, so only the roads, arrow and text light up. Reconnect CarPlay to apply.</string>
+    <string name="settings_zeekr_hud_size">Windshield HUD · size</string>
+    <string name="settings_zeekr_hud_horizontal">Windshield HUD · left / right</string>
+    <string name="settings_zeekr_hud_vertical">Windshield HUD · up / down</string>
+    <string name="settings_zeekr_hud_layout_stock">Like the stock navigation</string>
+    <string name="settings_zeekr_hud_layout_stock_description">Puts the turn card, map and compact arrow back in the band where the stock Zeekr navigation draws on the HUD (753×188, centred). Your size and position for every mode are reset.</string>
+    <string name="settings_zeekr_hud_mode_card">转向卡片</string>
+    <string name="settings_zeekr_hud_mode_map">地图</string>
+    <string name="settings_zeekr_hud_mode_compact">紧凑箭头</string>
+    <string name="settings_zeekr_hud_content">抬头显示内容</string>
+    <string name="settings_zeekr_hud_content_map">CarPlay 地图</string>
+    <string name="settings_zeekr_hud_content_card">CarPlay 转弯卡片</string>
+    <string name="settings_zeekr_hud_content_compact">紧凑箭头 (ZeePlay)</string>
+    <string name="settings_zeekr_hud_content_description">Map and turn card are drawn by CarPlay and need a reconnect to switch. Compact arrow is drawn by ZeePlay into a small square, so it fits next to the car\'s own HUD widgets. The map is rendered at the size you set below (applies after reconnect).</string>
+    <string name="settings_zeekr_cluster_map_description">Shows the iPhone\'s CarPlay map on the instrument-cluster display.</string>
 </resources>

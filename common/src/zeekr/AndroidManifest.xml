@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
+    <!-- Reading the car hotspot (getSoftApConfiguration) needs one of these. Both are granted only when the
+         build is signed with the car's platform key; on other cars they stay ungranted and the driver enters
+         the hotspot details by hand. No sharedUserId and no NETWORK_SETUP_WIZARD. -->
+    <uses-permission android:name="android.permission.NETWORK_SETTINGS" tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.OVERRIDE_WIFI_CONFIG" tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.car.permission.CAR_SPEED" />
     <uses-permission android:name="android.car.permission.CAR_POWERTRAIN" />
     <uses-permission android:name="android.car.permission.CAR_ENERGY" />

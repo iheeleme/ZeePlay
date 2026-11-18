@@ -32,6 +32,8 @@ interface MediaSink {
     fun onAudioStarted(id: AudioStreamId, format: AudioFormat, firstSample: Int) {}
     fun onAudioRtp(id: AudioStreamId, format: AudioFormat, rtp: ByteArray, sample: Int) {}
     fun onAudioStopped(id: AudioStreamId) {}
+    /** RTP-clock samples the media track has actually played since its first sample, or null. */
+    fun audioPlayoutSample(id: AudioStreamId): Long? = null
     fun onMicrophoneStarted(id: AudioStreamId, config: MicrophoneConfig) {}
     fun onMicrophoneStopped(id: AudioStreamId) {}
     fun onIapMessage(bytes: ByteArray) {}
@@ -146,10 +148,14 @@ class CarPlayMediaEngine(
         sink.setVideoRecoveryHandler(type) {
             if (streams[streamKey] === screen) {
                 // The cluster asks for a keyframe of its own screen; the plain command is the main screen's.
-                val command = if (type == STREAM_TYPE_ALT_SCREEN) {
-                    mapOf("type" to "forceKeyFrame", "params" to mapOf("uuid" to AirPlayInfoPlist.ALT_UUID))
-                } else {
-                    mapOf("type" to "forceKeyFrame")
+                val command = when (type) {
+                    STREAM_TYPE_ALT_SCREEN ->
+                        mapOf("type" to "forceKeyFrame", "params" to mapOf("uuid" to AirPlayInfoPlist.ALT_UUID))
+                    AirPlayInfoPlist.STREAM_TYPE_CARD_SCREEN ->
+                        mapOf("type" to "forceKeyFrame", "params" to mapOf("uuid" to AirPlayInfoPlist.CARD_UUID))
+                    AirPlayInfoPlist.STREAM_TYPE_MAP_SCREEN ->
+                        mapOf("type" to "forceKeyFrame", "params" to mapOf("uuid" to AirPlayInfoPlist.MAP_UUID))
+                    else -> mapOf("type" to "forceKeyFrame")
                 }
                 val sent = session.sendCommand(command)
                 session.logDebug("Video recovery: requested keyframe sent=$sent")
@@ -367,7 +373,7 @@ class CarPlayMediaEngine(
             "SETRATE", "SETRATEANCHORTIME" -> {
                 if (rate == null || rate !in 0..1) null else buffered.setRate(rtpTime, rate, session.syncedNtp())
             }
-            "GETANCHOR" -> buffered.anchor()
+            "GETANCHOR" -> buffered.anchor(session.syncedNtp())
             "FLUSHBUFFERED" -> {
                 (body["flushUntilTS"] as? Number)?.toLong()?.let { buffered.flush(it) }
                 null
@@ -508,8 +514,22 @@ class CarPlayMediaEngine(
                     (nowNs - originNs) / 1e9 - meta.playoutLatencyMs / 1000.0,
                 )
                 val firstUnsigned = firstSample.toLong() and 0xffff_ffffL
-                val sampleTime = (firstUnsigned + Math.round(elapsedSec * clockRate)) and
+                val wallSampleTime = (firstUnsigned + Math.round(elapsedSec * clockRate)) and
                     0xffff_ffffL
+                // Buffered media: report the track's REAL playout position, not the wall-clock
+                // extrapolation. Wall-clock hides decoder/HAL stalls, so the iPhone's own sync
+                // sees the drift and tears the stream down (FLUSH -> FLUSH -> TEARDOWN).
+                val playoutOffset = if (meta.format.audioType == "media")
+                    sink.audioPlayoutSample(AudioStreamId(meta.type, meta.format.audioType)) else null
+                val sampleTime = if (playoutOffset != null)
+                    (firstUnsigned + playoutOffset) and 0xffff_ffffL else wallSampleTime
+                if (meta.format.audioType == "media") {
+                    val src = if (playoutOffset != null) "track" else "wall"
+                    session.logDebug(
+                        "Audio: feedback-pos type=${meta.type} source=$src sampleTime=$sampleTime " +
+                            "wall=$wallSampleTime playoutOffset=${playoutOffset ?: -1} clockRate=$clockRate",
+                    )
+                }
                 entry["streamConnectionID"] = unsignedPlistInteger(meta.connectionId ?: 0L)
                 entry["timestamp"] = session.syncedNtp()
                 entry["timestampRawNs"] = nowNs
@@ -678,7 +698,8 @@ class CarPlayMediaEngine(
     }
 
     private fun isScreenStreamType(type: Int): Boolean =
-        type == STREAM_TYPE_MAIN_SCREEN || type == STREAM_TYPE_ALT_SCREEN
+        type == STREAM_TYPE_MAIN_SCREEN || type == STREAM_TYPE_ALT_SCREEN ||
+            type == AirPlayInfoPlist.STREAM_TYPE_CARD_SCREEN || type == AirPlayInfoPlist.STREAM_TYPE_MAP_SCREEN
 
     internal companion object {
         /**

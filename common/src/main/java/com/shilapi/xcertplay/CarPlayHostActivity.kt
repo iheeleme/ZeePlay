@@ -93,6 +93,7 @@ import com.shilapi.xcertplay.airplay.AirPlaySession
 import com.shilapi.xcertplay.airplay.AirPlaySessionListener
 import com.shilapi.xcertplay.airplay.CarPlayMediaEngine
 import com.shilapi.xcertplay.airplay.SafeAreaRect
+import com.shilapi.xcertplay.host.BuildConfig
 import com.shilapi.xcertplay.host.R
 import com.shilapi.xcertplay.location.AndroidCarPlayLocationProvider
 import com.shilapi.xcertplay.media.AndroidMediaSink
@@ -475,15 +476,19 @@ open class CarPlayHostActivity : ComponentActivity() {
     private var currentSurfaceTexture: SurfaceTexture? = null
     private var clusterPresentation: ClusterMapPresentation? = null
     private var clusterSurface: Surface? = null
+    private var zeekrHudHost: ZeekrHudHost? = null
     private var clusterMonitor: DiLink51ClusterMonitor? = null
     private var detectedCluster = ClusterActivityState.Snapshot(null, false)
     // Keep one surface per layer alive, including while its map card is hidden.
     private val clusterLayers = mutableMapOf<Boolean, ClusterMapPresentation>()
     private var clusterTurnGuidance: com.shilapi.xcertplay.hud.ClusterTurnGuidance? = null
+    private var windshieldHud: WindshieldHud? = null
     private val clusterTurnOverlayListener: (com.shilapi.xcertplay.hud.ClusterTurnGuidance?) -> Unit = { guidance ->
         runOnUiThread {
             clusterTurnGuidance = guidance
+            com.shilapi.xcertplay.airplay.CarPlayNavigationState.setTurnGuidance(guidance)
             applyClusterTurnOverlay()
+            windshieldHud?.update(guidance)
         }
     }
     // Copies of stream 111 outside the dashboard (centre card, launcher maps) each get their own decoder.
@@ -665,6 +670,7 @@ open class CarPlayHostActivity : ComponentActivity() {
     private var requestedSmallWindowForStream: Boolean? = null
     @Volatile private var adbNaviMode: com.shilapi.xcertplay.hud.BydClusterNaviMode? = null
     private var sessionLog: SessionLogFile? = null
+    private var sessionLogMirror: ((String) -> Unit)? = null
     private var gestureFingerCount = 3
     private var settingsGestureHint: TextView? = null
     private var gestureSequenceActive = false
@@ -1006,6 +1012,8 @@ open class CarPlayHostActivity : ComponentActivity() {
         existingWifiSsid = AirPlayPersistence.loadExistingWifiSsid(this)
         existingWifiPassphrase = AirPlayPersistence.loadExistingWifiPassphrase(this)
         existingWifiInterface = AirPlayPersistence.loadExistingWifiInterface(this)
+        // Zeekr: refresh the saved hotspot details from the car first (direct read, throttled; no-op elsewhere).
+        ZeekrHotspotAutoRead.refresh(this)
         manualHotspotSsid = AirPlayPersistence.loadManualHotspotSsid(this)
         manualHotspotPassphrase = AirPlayPersistence.loadManualHotspotPassphrase(this)
         manualHotspotBand = AirPlayPersistence.loadManualHotspotBand(this)
@@ -1285,6 +1293,7 @@ open class CarPlayHostActivity : ComponentActivity() {
         ensureClusterPresentation()
         AirPlayPersistence.overlaySettingsListener = { runOnUiThread { applyClusterTurnOverlay() } }
         com.shilapi.xcertplay.hud.BydNavigationOutputs.setTurnOverlayListener(clusterTurnOverlayListener)
+        if (windshieldHud == null) windshieldHud = createWindshieldHud(applicationContext)
         mainHandler.removeCallbacks(refreshTurnOverlay)
         mainHandler.post(refreshTurnOverlay)
         var systemBarsChanged = false
@@ -1999,6 +2008,8 @@ open class CarPlayHostActivity : ComponentActivity() {
         delayedDoubleSiri = null
         AirPlayPersistence.overlaySettingsListener = null
         com.shilapi.xcertplay.hud.BydNavigationOutputs.setTurnOverlayListener(null)
+        windshieldHud?.release()
+        windshieldHud = null
         com.shilapi.xcertplay.hud.BydNavigationOutputs.setClusterNaviModeListener(null)
         clusterMonitor?.stop()
         getSystemService(android.hardware.display.DisplayManager::class.java)
@@ -2022,6 +2033,8 @@ open class CarPlayHostActivity : ComponentActivity() {
         fallbackVideoView = null
         fallbackVideoBounds = null
         sessionLog?.append("Activity destroyed")
+        if (WheelKeyLog.mirror === sessionLogMirror) WheelKeyLog.mirror = null
+        sessionLogMirror = null
         sessionLog?.close()
         sessionLog = null
         super.onDestroy()
@@ -5120,8 +5133,23 @@ open class CarPlayHostActivity : ComponentActivity() {
             speechWithout8And16Khz = AirPlayPersistence.loadSpeechWithout8And16Khz(this),
             callAtCallRate = AirPlayPersistence.loadCallAtCallRate(this),
             disableAudioOutput = carBluetoothAudio,
+            // Zeekr windshield HUD (card/map) — advertised only when a HUD display is present.
+            hudCard = zeekrHudDisplayPresent() && ZeekrHudSettings.cardEnabled(this),
+            hudMap = zeekrHudDisplayPresent() && ZeekrHudSettings.mapEnabled(this),
+            hudMapSizePercent = ZeekrHudSettings.sizePercent(this),
+            hudMapWidthPixels = ZeekrHudSettings.mapStreamSize(this).first,
+            hudMapHeightPixels = ZeekrHudSettings.mapStreamSize(this).second,
+            hudMapMarkerHorizontal = ZeekrHudSettings.markerHorizontal(this),
+            hudMapMarkerVertical = ZeekrHudSettings.markerVertical(this),
         )
     }
+
+    /** A Zeekr windshield HUD display is present (gates advertising the HUD card/map screens). */
+    private fun zeekrHudDisplayPresent(): Boolean =
+        // The windshield HUD is a Zeekr-edition feature; keep it dormant in other editions even if a
+        // similarly shaped presentation display turns up.
+        BuildConfig.IS_ZEEKR &&
+            runCatching { com.shilapi.xcertplay.hud.zeekr.ZeekrDisplayRouter.hudDisplay(this) != null }.getOrDefault(false)
 
     /** Car Bluetooth audio: shows whether the iPhone keeps A2DP/HFP with the car now and once CarPlay runs. */
     private fun logCarBluetoothAudio() {
@@ -5429,6 +5457,8 @@ open class CarPlayHostActivity : ComponentActivity() {
                     startupRetryBudget.disconnected()
                     activeAirPlaySession = null
                     clusterSurface?.let { sink?.clearSurface(SCREEN_TYPE_ALT, it) }
+                    zeekrHudHost?.stop()
+                    zeekrHudHost = null
                     clearIphoneCornerMask()
                     CarPlayBackgroundSession.active = false
                     callPopupSessionReady = false
@@ -5701,6 +5731,9 @@ open class CarPlayHostActivity : ComponentActivity() {
         )
         sink = renderer
         currentSurface?.let(::attachSurface)
+        // Zeekr windshield HUD: show the CarPlay card/map stream there, by analogy with the cluster.
+        zeekrHudHost?.stop()
+        zeekrHudHost = if (zeekrHudDisplayPresent()) ZeekrHudHost(this, renderer).also { runCatching { it.start() } } else null
         MapMirrors.reapply()
         val media = createMediaEngine(renderer)
         val pairings = AirPlayPersistence.loadPairings(this) { id, key ->
@@ -6838,6 +6871,9 @@ open class CarPlayHostActivity : ComponentActivity() {
             )
         }
         sessionLog = activeLog
+        val mirror: (String) -> Unit = { AsyncDiagnosticLog.append(activeLog, it) }
+        sessionLogMirror = mirror
+        WheelKeyLog.mirror = mirror
     }
 
     private fun refreshLogView(nowMillis: Long) {

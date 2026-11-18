@@ -552,7 +552,8 @@ object AirPlayPersistence {
 
     fun loadBtSuspendDuringCarplay(context: Context): Boolean =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-            .getBoolean(KEY_BT_SUSPEND_DURING_CARPLAY, false)
+            // On by default on Zeekr: the car's A2DP sink otherwise pauses the iPhone during CarPlay.
+            .getBoolean(KEY_BT_SUSPEND_DURING_CARPLAY, com.shilapi.xcertplay.host.BuildConfig.IS_ZEEKR)
 
     fun loadHideBydCallPopup(context: Context): Boolean =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -651,9 +652,12 @@ object AirPlayPersistence {
             .putInt(KEY_AMBIENT_LUX_THRESHOLD, threshold.lux).apply()
     }
 
-    fun loadAppAppearance(context: Context): AppAppearance = AppAppearance.fromKey(
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY_APP_APPEARANCE, null),
-    )
+    // Nothing saved yet: the Zeekr edition follows the car's day/night (AUTO), others start dark.
+    // An unknown saved value still falls back to dark.
+    fun loadAppAppearance(context: Context): AppAppearance =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY_APP_APPEARANCE, null)
+            ?.let(AppAppearance::fromKey)
+            ?: if (com.shilapi.xcertplay.host.BuildConfig.IS_ZEEKR) AppAppearance.AUTO else AppAppearance.DARK
 
     fun saveAppAppearance(context: Context, appearance: AppAppearance) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
@@ -866,7 +870,10 @@ object AirPlayPersistence {
     }
 
     fun loadClusterMapEnabled(context: Context): Boolean =
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_CLUSTER_MAP, false)
+        // Zeekr 001 has a dedicated instrument-cluster panel, so default the cluster map on there;
+        // other editions keep it opt-in.
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getBoolean(KEY_CLUSTER_MAP, com.shilapi.xcertplay.host.BuildConfig.IS_ZEEKR)
 
     fun loadAdbClusterEnabled(context: Context): Boolean = loadClusterMapEnabled(context) &&
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_ADB_CLUSTER_ACTIVITY, false)
@@ -1391,7 +1398,8 @@ object AirPlayPersistence {
 
     fun loadHideTopBar(context: Context): Boolean =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-            .getBoolean(KEY_HIDE_TOP_BAR, true)
+            // Zeekr keeps the car's status bar and dock visible by default.
+            .getBoolean(KEY_HIDE_TOP_BAR, !com.shilapi.xcertplay.host.BuildConfig.IS_ZEEKR)
 
     fun saveHideTopBar(context: Context, hide: Boolean) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
@@ -1401,7 +1409,7 @@ object AirPlayPersistence {
 
     fun loadHideBottomBar(context: Context): Boolean =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-            .getBoolean(KEY_HIDE_BOTTOM_BAR, true)
+            .getBoolean(KEY_HIDE_BOTTOM_BAR, !com.shilapi.xcertplay.host.BuildConfig.IS_ZEEKR)
 
     fun saveHideBottomBar(context: Context, hide: Boolean) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()

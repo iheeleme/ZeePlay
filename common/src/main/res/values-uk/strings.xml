@@ -596,6 +596,8 @@
     <string name="auto_car_hotspot_description">Вмикає збережену точку доступу під час відкриття DiPlay. Перемикач автоматично запитує потрібні дозволи через ADB; підтвердьте запит на екрані авто. Для запуску після завантаження ввімкніть відкриття DiPlay після запуску авто. Назва й пароль зберігаються, точка доступу автоматично не вимикається.</string>
     <string name="settings_car_hotspot_config_title">Імпорт даних точки доступу автомобіля (експериментально)</string>
     <string name="settings_car_hotspot_config_description">Вводити дані точки доступу вручну не потрібно: дані автомобіля спочатку імпортуються. Якщо в автомобілі їх немає, після підтвердження туди записуються дані DiPlay, і пристроям, що використовують цю точку доступу, може знадобитися повторне підключення. На Android 11 і новіших потрібен ADB; на Android 8–10 недоступно.</string>
+    <string name="settings_car_hotspot_config_description_zeekr">Нічого вводити не потрібно: якщо збірка може прочитати хотспот авто (лише на авто з платформенним підписом), його ім’я та пароль підставляться самі. Інакше введіть їх вручну нижче. Хотспот авто не змінюється.</string>
+    <string name="settings_car_hotspot_config_manual_fallback">Не вдалося прочитати хотспот авто автоматично — введіть ім’я та пароль нижче.</string>
     <string name="settings_car_hotspot_config_unsupported">Імпорт даних точки доступу автомобіля не підтримується в цій версії Android.</string>
     <string name="settings_car_hotspot_config_written">Точка доступу автомобіля тепер використовує пароль DiPlay.</string>
     <string name="settings_car_hotspot_config_imported">Налаштування точки доступу автомобіля імпортовано.</string>
@@ -983,4 +985,26 @@
     <string name="settings_zeekr_controls_description">Керування сумісними кнопками автомобіля. Під час наступного підключення.</string>
     <string name="settings_zeekr_gesture_hint">Виберіть жест, який не конфліктує із системою автомобіля.</string>
     <string name="settings_zeekr_window_hint">Відкриває CarPlay у вікні застосунку для сумісних карток і розділеного екрана. Застосовується під час наступного запуску CarPlay.</string>
+    <string name="settings_zeekr_hud">Навігація: щиток + HUD</string>
+    <string name="settings_zeekr_hud_description">Показувати наступний маневр — стрілку, дистанцію й дорогу — на приладовому щитку та проєкційному HUD під час навігації.</string>
+    <string name="settings_zeekr_hud_card">Картка повороту на лобовому</string>
+    <string name="settings_zeekr_hud_card_description">Показувати власну картку повороту CarPlay (стрілка маневру, відстань і дорога) на проєкційному дисплеї замість рухомої мапи під час навігації.</string>
+    <string name="settings_zeekr_bt_pause">Вимикати Bluetooth машини під час CarPlay</string>
+    <string name="settings_zeekr_bt_pause_description">Музичний Bluetooth-плеєр машини ставить iPhone на паузу, щойно той грає через CarPlay. Поки працює бездротовий CarPlay, Bluetooth машини вимикається приблизно через 10 с після підключення й вмикається, коли CarPlay завершується або перед наступним підключенням. Інші Bluetooth-пристрої тим часом відключаються; дзвінки через CarPlay працюють. Пари не змінюються. Застосовується з наступного підключення.</string>
+    <string name="settings_zeekr_hud_dark">Темний HUD на лобовому (експериментально)</string>
+    <string name="settings_zeekr_hud_dark_description">Просить CarPlay малювати мапу й картку повороту для лобового скла в темній темі, щоб світилися лише дороги, стрілка й текст. Застосовується після перепідключення CarPlay.</string>
+    <string name="settings_zeekr_hud_size">HUD на лобовому · розмір</string>
+    <string name="settings_zeekr_hud_horizontal">HUD на лобовому · ліворуч / праворуч</string>
+    <string name="settings_zeekr_hud_vertical">HUD на лобовому · вгору / вниз</string>
+    <string name="settings_zeekr_hud_layout_stock">Як у штатного навігатора</string>
+    <string name="settings_zeekr_hud_layout_stock_description">Повертає картку, мапу й компактну стрілку в смугу, де малює штатна навігація Zeekr (753×188, по центру). Розмір і положення всіх режимів скидаються.</string>
+    <string name="settings_zeekr_hud_mode_card">картка повороту</string>
+    <string name="settings_zeekr_hud_mode_map">мапа</string>
+    <string name="settings_zeekr_hud_mode_compact">компактна стрілка</string>
+    <string name="settings_zeekr_hud_content">Що показувати на лобовому</string>
+    <string name="settings_zeekr_hud_content_map">Мапа CarPlay</string>
+    <string name="settings_zeekr_hud_content_card">Картка повороту CarPlay</string>
+    <string name="settings_zeekr_hud_content_compact">Компактна стрілка (ZeePlay)</string>
+    <string name="settings_zeekr_hud_content_description">Мапу й картку малює CarPlay, для зміни потрібне перепідключення. Компактну стрілку малює ZeePlay у невеликий квадрат — вона вміщується поруч із віджетами авто. Мапа рендериться в розмірі, заданому нижче (застосовується після перепідключення).</string>
+    <string name="settings_zeekr_cluster_map_description">Показує карту CarPlay з iPhone на панелі приладів.</string>
 </resources>
