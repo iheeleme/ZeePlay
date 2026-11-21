@@ -131,6 +131,8 @@ class TelephonyMicrophoneTest {
     }
 
     @Test fun aCallWhileCarBluetoothIsOffUsesTheCabinMicrophone() {
+        // Zeekr keeps the communication path instead; see the test below.
+        org.junit.Assume.assumeFalse(com.shilapi.xcertplay.SharedEdition.ZEEKR)
         val diagnostics = recordDiagnostics()
         context.getSharedPreferences("diplay_bt_suspend", 0).edit().putBoolean("restore_initially_enabled", true).commit()
         shadowOf(context.getSystemService(BluetoothManager::class.java).adapter).setState(BluetoothAdapter.STATE_OFF)
@@ -142,6 +144,21 @@ class TelephonyMicrophoneTest {
         assertTrue(diagnostics.joinToString("\n"),
             diagnostics.any { it.startsWith("Microphone: start type=telephony source=MIC ") })
         assertTrue(ShadowAudioEffect.getAudioEffects().isEmpty())
+        sink.onMicrophoneStopped(telephony)
+        assertEquals(AudioManager.MODE_NORMAL, manager.mode)
+    }
+
+    @Test fun onZeekrACallWhileCarBluetoothIsOffKeepsTheCommunicationPath() {
+        // The 001 tunes echo and noise cancelling for VOICE_COMMUNICATION in communication mode; the Bluetooth
+        // pause (a Zeekr default) must not switch the call to the plain microphone without effects.
+        org.junit.Assume.assumeTrue(com.shilapi.xcertplay.SharedEdition.ZEEKR)
+        context.getSharedPreferences("diplay_bt_suspend", 0).edit().putBoolean("restore_initially_enabled", true).commit()
+        shadowOf(context.getSystemService(BluetoothManager::class.java).adapter).setState(BluetoothAdapter.STATE_OFF)
+        manager.mode = AudioManager.MODE_NORMAL
+        sink.onMicrophoneStarted(telephony, config("telephony"))
+        val record = awaitCapture()
+        assertEquals(AudioManager.MODE_IN_COMMUNICATION, manager.mode)
+        assertEquals(MediaRecorder.AudioSource.VOICE_COMMUNICATION, record.audioSource)
         sink.onMicrophoneStopped(telephony)
         assertEquals(AudioManager.MODE_NORMAL, manager.mode)
     }

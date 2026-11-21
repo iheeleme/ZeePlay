@@ -556,11 +556,21 @@ class AndroidMediaSink(
         if (before != after) onMediaAudioChanged(after)
     }
 
+    /**
+     * With the car's Bluetooth paused by DiPlay, BYD and tablet head units leave communication mode on the
+     * earpiece, so the call goes to the loudspeaker with the plain microphone. Not on Zeekr: its calls play on
+     * the Phone Bus either way, and the 001 firmware tunes echo and noise cancelling for the communication
+     * path (VOICE_COMMUNICATION pre-processing, voip_tx with an echo_ref input). Skipping that path there left
+     * CarPlay calls with no echo cancelling at all once the Bluetooth pause became the Zeekr default.
+     */
+    private fun bluetoothPausedSpeakerphone(): Boolean =
+        !com.shilapi.xcertplay.SharedEdition.ZEEKR &&
+            appContext != null && BydBluetoothSuspend.isSuspendedByUs(appContext)
+
     override fun onMicrophoneStarted(id: AudioStreamId, config: MicrophoneConfig) {
         // This callback runs on the downlink thread; microphone failures must not stop playback.
         try {
-            val speakerphoneCall = config.audioType == "telephony" &&
-                appContext != null && BydBluetoothSuspend.isSuspendedByUs(appContext)
+            val speakerphoneCall = config.audioType == "telephony" && bluetoothPausedSpeakerphone()
             if (config.audioType == "telephony" && !speakerphoneCall) enterCommunicationMode(id)
             val uplink = microphoneUplinks.computeIfAbsent(id) {
                 MicrophoneUplink(config, onAudioDiagnostic,
@@ -747,8 +757,7 @@ class AndroidMediaSink(
             mediaBufferMillis,
             onAudioDiagnostic,
             ambientSinkToken,
-            speakerphoneCall = format.audioType == "telephony" &&
-                appContext != null && BydBluetoothSuspend.isSuspendedByUs(appContext),
+            speakerphoneCall = format.audioType == "telephony" && bluetoothPausedSpeakerphone(),
             echoReference = echoReference,
             voiceFilter = callVoiceFilter && format.audioType == TELEPHONY_AUDIO_TYPE,
         ).also {
