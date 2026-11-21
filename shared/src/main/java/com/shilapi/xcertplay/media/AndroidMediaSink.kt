@@ -281,6 +281,7 @@ class AndroidMediaSink(
     private val audioModeLock = Any()
     private var communicationModeStream: AudioStreamId? = null
     private var callSpeaker: CallSpeaker? = null // guarded by audioModeLock
+    private var callFocus: AudioFocusRequestCompat? = null // guarded by audioModeLock
     private var earpieceFallbackTried = false // guarded by audioModeLock
     private val pendingVideoCodec = ConcurrentHashMap<Int, VideoCodec>()
     private val videoRecoveryHandlers = ConcurrentHashMap<Int, () -> Unit>()
@@ -608,6 +609,7 @@ class AndroidMediaSink(
             earpieceFallbackTried = false
             val speakerRequested = runCatching(callSpeakerphone).getOrDefault(false)
             if (speakerRequested) callSpeaker = CallSpeaker.on(manager)
+            val focusResult = if (com.shilapi.xcertplay.SharedEdition.ZEEKR) requestCallFocus(manager) else null
             Log.i("xcertplay-usb", "audio mode $before -> ${manager.mode} for telephony stream=$id")
             // The report, not just logcat: a head unit left in the voice path plays no media,
             // and that cannot be diagnosed from a car without adb. A failing report must not
@@ -615,10 +617,28 @@ class AndroidMediaSink(
             runCatching {
                 onAudioDiagnostic("Audio: mode entered communication from=$before" +
                     " now=${manager.mode} stream=$id" +
-                    if (speakerRequested) " loudspeaker=${callSpeaker != null}" else "")
+                    (if (speakerRequested) " loudspeaker=${callSpeaker != null}" else "") +
+                    (if (focusResult != null) " callFocus=$focusResult" else ""))
             }
         }
     }
+
+    /**
+     * Zeekr: holds call audio focus for the length of a CarPlay call. The car picks the volume group for its
+     * volume keys from the focus holder's usage; without a call holder it stayed on another group (the voice
+     * assistant) and the driver had to pick the call volume by hand. USAGE_VOICE_COMMUNICATION is the "call"
+     * context on BUS03_PHONE in the 001's car_audio_configuration. Guarded by [audioModeLock].
+     */
+    private fun requestCallFocus(manager: AudioManager): Int? = runCatching {
+        val attributes = AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
+            .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+            .build()
+        val request = AudioFocusRequestCompat(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT, attributes,
+            AudioManager.OnAudioFocusChangeListener { }, Handler(Looper.getMainLooper()))
+        callFocus = request
+        request.request(manager)
+    }.getOrNull()
 
     /**
      * A head unit built on a phone chip plays communication audio on an earpiece, which nobody hears in a car: the
@@ -645,6 +665,8 @@ class AndroidMediaSink(
             communicationModeStream = null
             callSpeaker?.restore()
             callSpeaker = null
+            callFocus?.let { focus -> runCatching { focus.abandon(manager) } }
+            callFocus = null
             // The report is built inside the try but sent outside it: reporting from in there
             // would let a failing callback be caught as a failed restore.
             val line = try {
