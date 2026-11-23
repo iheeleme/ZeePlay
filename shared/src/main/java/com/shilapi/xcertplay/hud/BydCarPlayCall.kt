@@ -155,6 +155,7 @@ object BydCarPlayCall {
         }
         Log.i(TAG, "CarPlay call ${card?.phase ?: "ended"}")
         PhoneAudioRoute.carPlayCall(card != null)
+        CarPlayCallEvents.publish(card)
         val app = context ?: return
         if (BydOutputSettings.carPlayCalls(app)) writer.execute { apply(app, card); if (card == null) arm(app) }
     }
@@ -175,6 +176,7 @@ object BydCarPlayCall {
         sessionActive = false
         PhoneAudioRoute.carPlayCall(false)
         synchronized(state) { state.clear() }
+        CarPlayCallEvents.publish(null)
         val app = context ?: return
         writer.execute { resetRetry(null); apply(app, null); disarm(app) }
     }
