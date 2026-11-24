@@ -43,6 +43,7 @@ internal object ZeekrClusterCall {
     private var callback: Any? = null
     private var card: CarPlayCallCard? = null // handler thread
     private var shown = false // handler thread: the cluster shows a ZeePlay call
+    private var micMuted = false // handler thread: ZeePlay muted the iPhone's microphone for this call
     private var failureNoted = false
 
     fun install(context: Context) {
@@ -57,6 +58,7 @@ internal object ZeekrClusterCall {
     }
 
     private fun onCall(next: CarPlayCallCard?) {
+        if (next == null) micMuted = false
         card = next
         if (next == null && !shown) return
         send()
@@ -95,7 +97,11 @@ internal object ZeekrClusterCall {
                     "hashCode" -> System.identityHashCode(proxy)
                     "equals" -> proxy === args?.getOrNull(0)
                     "toString" -> "ZeePlayClusterCallCallback"
-                    else -> { handler.post { onClusterButton(method.name) }; null }
+                    else -> {
+                        val arg = (args?.getOrNull(0) as? Number)?.toInt()
+                        handler.post { onClusterButton(method.name, arg) }
+                        null
+                    }
                 }
             }
             updateCallInfo = phoneCls.getMethod("updateCallInfo", infoCls)
@@ -113,15 +119,19 @@ internal object ZeekrClusterCall {
         }.getOrNull()
     }
 
-    private fun onClusterButton(name: String) {
+    private fun onClusterButton(name: String, arg: Int?) {
         val current = card
-        WheelKeyLog.note("Cluster call: button $name call=${current?.phase}")
+        WheelKeyLog.note("Cluster call: button $name${if (arg != null) "($arg)" else ""} call=${current?.phase}")
         if (name == "onCallInfoUpdateRequired") {
             if (shown || current != null) send()
             return
         }
         if (current == null) return
         val controller = CarPlayBackgroundSession.snapshot()?.controller ?: return
+        if (name == "onSwitchMicMode") {
+            switchMute(controller, current, arg)
+            return
+        }
         val sent = when (name) {
             "onAnswerCall", "onAnswerAndHoldCall", "onAnswerAndEndCall" ->
                 if (current.phase == CarPlayCallCard.Phase.RINGING) controller.answerCall() else null
@@ -129,6 +139,25 @@ internal object ZeekrClusterCall {
             else -> null
         } ?: return
         Log.i(TAG, "cluster $name sent=$sent")
+    }
+
+    /**
+     * The wheel's and the cluster's mute key. Like the car's own phone: 0 unmutes, 1 mutes, anything else
+     * toggles. CarPlay's Phone Mute is a toggle and the iPhone does not report the mute back here, so the
+     * state is ZeePlay's own and is sent only when it has to change; it resets with each call.
+     */
+    private fun switchMute(controller: com.shilapi.xcertplay.orchestration.CarPlayController, current: CarPlayCallCard, mode: Int?) {
+        if (current.phase != CarPlayCallCard.Phase.ACTIVE) return
+        val wanted = when (mode) {
+            0 -> false
+            1 -> true
+            else -> !micMuted
+        }
+        if (wanted == micMuted) { send(); return }
+        val sent = controller.toggleCallMute()
+        if (sent) micMuted = wanted
+        WheelKeyLog.note("Cluster call: mute=$micMuted sent=$sent")
+        send()
     }
 
     private fun statusOf(card: CarPlayCallCard?): Int = when (card?.phase) {
@@ -142,6 +171,7 @@ internal object ZeekrClusterCall {
     private fun info(card: CarPlayCallCard?, status: Int): Any {
         val cls = infoCls!!
         val name = card?.name.orEmpty()
+        val muted = card != null && micMuted
         val duration = card?.activeSinceMillis?.let { (System.currentTimeMillis() - it).coerceAtLeast(0L) } ?: 0L
         return Proxy.newProxyInstance(cls.classLoader, arrayOf(cls)) { proxy, method, args ->
             when (method.name) {
@@ -153,6 +183,7 @@ internal object ZeekrClusterCall {
                 "getContactName", "getContactNumber" -> name
                 "getCallDuration" -> duration
                 "isHandFree" -> true
+                "isMicOnVehicleMuted" -> muted
                 "getCallCount" -> if (status == STATUS_NONE) 0 else 1
                 else -> defaultFor(method.returnType)
             }

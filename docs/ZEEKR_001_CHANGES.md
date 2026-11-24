@@ -61,6 +61,8 @@ seconds.
 - The call shows on the instrument cluster through the ECARX `IPhoneCallInteraction` (incoming, outgoing,
   connected, with the caller and the call time), and the cluster's answer and hang-up buttons act on the
   iPhone call. The report shows `Cluster call:` lines.
+- The wheel's (and the cluster's) mute key mutes the iPhone's microphone during a connected call (CarPlay
+  Phone Mute), and the cluster shows the mute.
 
 ## Wireless connection / car hotspot
 
