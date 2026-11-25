@@ -5289,9 +5289,12 @@ open class CarPlayHostActivity : ComponentActivity() {
 
     private fun defaultAirPlayIconBytes(): ByteArray =
         // Shown in CarPlay's app list as the "back to the car" button.
-        resources.openRawResource(
-            CarBrandBadge.fromKey(AirPlayPersistence.loadCarBrand(this)).iconRawRes,
-        ).use { it.readBytes() }
+        resources.openRawResource(carBrandBadge().iconRawRes).use { it.readBytes() }
+
+    /** The BYD-series badges are not offered on Zeekr, so a restored backup cannot pick one there. */
+    private fun carBrandBadge(): CarBrandBadge =
+        if (BuildConfig.IS_ZEEKR) CarBrandBadge.DEFAULT
+        else CarBrandBadge.fromKey(AirPlayPersistence.loadCarBrand(this))
 
     private fun updateAirPlayIconPreview() {
         val preview = iconPreviewView ?: return
@@ -5303,12 +5306,13 @@ open class CarPlayHostActivity : ComponentActivity() {
                 AirPlayPersistence.clearCustomAirPlayIcon(this)
             }
         }
-        val badge = CarBrandBadge.fromKey(AirPlayPersistence.loadCarBrand(this))
+        val badge = carBrandBadge()
         val bitmap = customBitmap ?: BitmapFactory.decodeResource(resources, badge.iconRawRes)
         preview.setImageBitmap(bitmap)
         // Share the exact settings-vehicle wording: "Custom icon", else the badge's own label.
         iconStatusView?.text =
             if (customBitmap != null) getString(R.string.car_button_icon_custom)
+            else if (BuildConfig.IS_ZEEKR) getString(R.string.default_icon)
             else getString(badge.labelRes)
     }
 

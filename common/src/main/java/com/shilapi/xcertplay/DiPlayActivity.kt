@@ -6146,7 +6146,9 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
     }
 
     private fun carButtonControls(parent: LinearLayout) {
-        val badge = CarBrandBadge.fromKey(AirPlayPersistence.loadCarBrand(this))
+        // The brand badges are BYD series; the Zeekr edition keeps its own default icon and offers none.
+        val badge = if (BuildConfig.IS_ZEEKR) CarBrandBadge.DEFAULT
+            else CarBrandBadge.fromKey(AirPlayPersistence.loadCarBrand(this))
         val custom = AirPlayPersistence.loadCustomAirPlayIconFile(this)?.let { BitmapFactory.decodeFile(it.absolutePath) }
         val preview = row().apply { gravity = Gravity.CENTER_VERTICAL }
         preview.addView(ImageView(this).apply {
@@ -6159,17 +6161,20 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         val text = column()
         text.addView(label(getString(R.string.car_button_icon), 18, TEXT, true))
         text.addView(label(
-            if (custom != null) getString(R.string.car_button_icon_custom) else getString(badge.labelRes),
+            if (custom != null) getString(R.string.car_button_icon_custom)
+            else if (BuildConfig.IS_ZEEKR) getString(R.string.default_icon) else getString(badge.labelRes),
             14, MUTED,
         ).apply { setPadding(0, dp(6), 0, 0) })
         preview.addView(text, LinearLayout.LayoutParams(0, -2, 1f))
         parent.addView(preview)
         // Brand badge row sits above "Choose image" so the preset picks the badge before a custom image.
-        val brandTitle = getString(R.string.settings_car_brand_title)
-        parent.addView(button("$brandTitle · ${getString(badge.labelRes)}", false) {
-            showCarBrandPicker(badge)
-        }, settingsButtonLayout())
-        parent.addView(choiceNote(getString(R.string.settings_car_brand_summary)))
+        if (!BuildConfig.IS_ZEEKR) {
+            val brandTitle = getString(R.string.settings_car_brand_title)
+            parent.addView(button("$brandTitle · ${getString(badge.labelRes)}", false) {
+                showCarBrandPicker(badge)
+            }, settingsButtonLayout())
+            parent.addView(choiceNote(getString(R.string.settings_car_brand_summary)))
+        }
         parent.addView(button(getString(R.string.choose_image), false) {
             launchCarButtonImagePicker(
                 openDocument = { iconDocumentPicker.launch(arrayOf("image/*")) },
