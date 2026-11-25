@@ -248,11 +248,12 @@ internal class BufferedAudioStream(
      * buffered flow control follows the actual AudioTrack clock instead of a wall-clock estimate — the
      * estimate drifts (startup latency + DAC rate) and makes the phone FLUSHBUFFERED / re-SETUP the
      * media stream, which is why buffered music never sustains while realtime prompts play fine. Falls
-     * back to the stored anchor before playback has a real head position.
+     * back to the stored anchor before playback has a real head position, and returns the stored anchor
+     * unchanged when no [nowNtp] is given.
      */
-    fun anchor(nowNtp: BigInteger): Map<String, Any?>? = synchronized(lock) {
+    fun anchor(nowNtp: BigInteger? = null): Map<String, Any?>? = synchronized(lock) {
         val start = feedStartTimestamp
-        if (rate > 0 && start != null) {
+        if (nowNtp != null && rate > 0 && start != null) {
             val played = runCatching { sink.audioPlayoutSample(id) }.getOrNull()
             if (played != null) {
                 val real = (start + played) and U32
