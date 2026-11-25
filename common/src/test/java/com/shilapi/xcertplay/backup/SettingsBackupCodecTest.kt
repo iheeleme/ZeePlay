@@ -3,6 +3,8 @@ package com.shilapi.xcertplay.backup
 import android.content.Context
 import com.shilapi.xcertplay.AirPlayPersistence
 import com.shilapi.xcertplay.CarPlayPicture
+import com.shilapi.xcertplay.DiPlayPreferences
+import com.shilapi.xcertplay.transport.LockdownPairRecord
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -83,6 +85,27 @@ class SettingsBackupCodecTest {
         assertFalse(diplay.has("phone_name"))
         assertEquals(80, document.getJSONObject("settings").getJSONObject("carplay_picture").getInt("brightness"))
         assertFalse(document.getJSONObject("settings").has("diplay_car_hotspot"))
+    }
+
+    @Test
+    fun exportOmitsWiredPairRecords() {
+        AirPlayPersistence.saveLockdownRecord(
+            context,
+            LockdownPairRecord.restore(
+                hostId = "HOST-OF-OWNER",
+                systemBuid = "BUID",
+                wifiMacAddress = "aa:bb:cc:dd:ee:ff",
+                devicePublicKeyPem = "device-key".toByteArray(),
+                deviceCertificatePem = "device-cert".toByteArray(),
+                hostPrivateKeyPem = "host-private".toByteArray(),
+                hostCertificatePem = "host-cert".toByteArray(),
+                rootPrivateKeyPem = "root-private".toByteArray(),
+                rootCertificatePem = "root-cert".toByteArray(),
+            ),
+        )
+        val document = String(SettingsBackupCodec.export(context, "0.2.22"))
+        assertFalse(document.contains("HOST-OF-OWNER"))
+        assertFalse(document.contains("lockdown"))
     }
 
     @Test
@@ -176,6 +199,23 @@ class SettingsBackupCodecTest {
     }
 
     @Test
+    fun anImportedAppearanceDeclarationOfAnotherTypeNeverReachesItsReader() {
+        // The key is new, so upgraded installs have not stored it; the reader calls getBoolean.
+        for (wrong in listOf("\"true\"", "1", "1.5")) {
+            prefs("xcertplay_airplay").edit().clear().commit()
+            val outcome = SettingsBackupCodec.import(context, """{"format": "diplay-settings", "version": 1, "settings": {"xcertplay_airplay": {"declare_automatic_appearance": $wrong}}}""".toByteArray())
+            assertEquals(0, outcome.applied)
+            assertFalse(prefs("xcertplay_airplay").contains("declare_automatic_appearance"))
+            assertTrue(AirPlayPersistence.loadDeclareAutomaticAppearance(context)) // ClassCastException when a String, Int or Float was stored
+        }
+        prefs("xcertplay_airplay").edit().clear().commit()
+        SettingsBackupCodec.import(context, """{"format": "diplay-settings", "version": 1, "settings": {"xcertplay_airplay": {"declare_automatic_appearance": false}}}""".toByteArray())
+        assertFalse(AirPlayPersistence.loadDeclareAutomaticAppearance(context))
+        SettingsBackupCodec.import(context, """{"format": "diplay-settings", "version": 1, "settings": {"xcertplay_airplay": {"declare_automatic_appearance": true}}}""".toByteArray())
+        assertTrue(AirPlayPersistence.loadDeclareAutomaticAppearance(context))
+    }
+
+    @Test
     fun exportKeepsUnlistedKeysOfPictureAndHotspotFilesOut() {
         prefs("carplay_picture").edit().putInt("brightness", 5).putString("stray", "x").apply()
         prefs("diplay_car_hotspot").edit().putBoolean("auto_enable", true).putString("stray", "x").apply()
@@ -221,7 +261,7 @@ class SettingsBackupCodecTest {
     fun importRejectsOutOfRangeOrFractionalNumbers() {
         prefs("xcertplay_airplay").edit()
             .putLong("cluster_test_counter", 5L)
-            .putFloat("ui_scale_percent", 1f)
+            .putInt("ui_scale_percent", 1)
             .putInt("display_fps", 60)
             .apply()
         val document = """
@@ -233,7 +273,7 @@ class SettingsBackupCodecTest {
         assertEquals(0, outcome.applied)
         assertEquals(3, outcome.skipped)
         assertEquals(5L, prefs("xcertplay_airplay").getLong("cluster_test_counter", 0L))
-        assertEquals(1f, prefs("xcertplay_airplay").getFloat("ui_scale_percent", 0f))
+        assertEquals(1, prefs("xcertplay_airplay").getInt("ui_scale_percent", 0))
         assertEquals(60, prefs("xcertplay_airplay").getInt("display_fps", 0))
     }
 
@@ -244,7 +284,7 @@ class SettingsBackupCodecTest {
             .putBoolean("temporary_system_bars", true)
             .putBoolean("hevc_enabled", true)
             .putString("manual_hotspot_ssid", "car-ap")
-            .putFloat("ui_scale_percent", 100f)
+            .putInt("ui_scale_percent", 100)
             .apply()
         prefs("diplay_car_hotspot").edit().putBoolean("auto_enable", true).apply()
         val document = SettingsBackupCodec.export(context, "0.2.17")
@@ -253,7 +293,7 @@ class SettingsBackupCodecTest {
             .putBoolean("temporary_system_bars", false)
             .putBoolean("hevc_enabled", false)
             .putString("manual_hotspot_ssid", "changed")
-            .putFloat("ui_scale_percent", 120f)
+            .putInt("ui_scale_percent", 120)
             .apply()
         prefs("diplay_car_hotspot").edit().putBoolean("auto_enable", false).apply()
         val outcome = SettingsBackupCodec.import(context, document)
@@ -264,8 +304,140 @@ class SettingsBackupCodecTest {
         assertEquals(true, airplay.getBoolean("hevc_enabled", false))
         // The car's hotspot name is not part of a backup.
         assertEquals("changed", airplay.getString("manual_hotspot_ssid", ""))
-        assertEquals(100f, airplay.getFloat("ui_scale_percent", 0f))
+        assertEquals(100, airplay.getInt("ui_scale_percent", 0))
         assertEquals(true, prefs("diplay_car_hotspot").getBoolean("auto_enable", false))
         assertFalse(airplay.contains("identity_private"))
+    }
+
+    @Test
+    fun aFreshInstallRejectsWronglyTypedAirplayValues() {
+        prefs("xcertplay_airplay").edit().clear().commit()
+        val defaultFps = AirPlayPersistence.loadFps(context)
+        val document = """
+            {"format": "diplay-settings", "version": 1, "settings": {
+              "xcertplay_airplay": {
+                "hevc_enabled": "yes", "display_fps": "60", "display_scale_percent": "85",
+                "black_corner_radius_dp": "24", "manual_hotspot_channel": "6",
+                "navigation_stream_type": "14"
+              }
+            }}
+        """.trimIndent()
+        val outcome = SettingsBackupCodec.import(context, document.toByteArray())
+        assertEquals(0, outcome.applied)
+        assertEquals(6, outcome.skipped)
+        // A wrong type must never be stored: getBoolean / getInt would throw ClassCastException.
+        assertFalse(prefs("xcertplay_airplay").contains("hevc_enabled"))
+        assertFalse(prefs("xcertplay_airplay").contains("display_fps"))
+        assertFalse(AirPlayPersistence.loadHevcEnabled(context))
+        assertEquals(defaultFps, AirPlayPersistence.loadFps(context))
+    }
+
+    @Test
+    fun aFreshInstallTakesCallMediaOutputOnlyAsABoolean() {
+        fun import(value: String) = SettingsBackupCodec.import(context,
+            """{"format": "diplay-settings", "version": 1, "settings": {"xcertplay_airplay": {"call_media_output": $value}}}""".toByteArray())
+        for (wrong in listOf("\"yes\"", "1", "1.5")) {
+            prefs("xcertplay_airplay").edit().clear().commit()
+            val outcome = import(wrong)
+            assertEquals(wrong, 0, outcome.applied)
+            assertEquals(wrong, 1, outcome.skipped)
+            // A wrong type must never be stored: getBoolean would throw ClassCastException at the next call.
+            assertFalse(wrong, prefs("xcertplay_airplay").contains("call_media_output"))
+            assertFalse(wrong, AirPlayPersistence.loadCallMediaOutput(context))
+        }
+        assertEquals(1, import("true").applied)
+        assertTrue(AirPlayPersistence.loadCallMediaOutput(context))
+    }
+
+    @Test
+    fun aFreshInstallTakesTheNewerBooleanAndIntKeysOnlyAsTheirType() {
+        fun import(key: String, value: String) = SettingsBackupCodec.import(context,
+            """{"format": "diplay-settings", "version": 1, "settings": {"xcertplay_airplay": {"$key": $value}}}""".toByteArray())
+        // Read with getBoolean: a String or number kept here would throw ClassCastException in Settings or at connect.
+        for (key in listOf("car_music_link_drop", "fit_screen_shape")) {
+            for (wrong in listOf("\"yes\"", "1", "1.5")) {
+                prefs("xcertplay_airplay").edit().clear().commit()
+                val outcome = import(key, wrong)
+                assertEquals("$key $wrong", 0, outcome.applied)
+                assertEquals("$key $wrong", 1, outcome.skipped)
+                assertFalse("$key $wrong", prefs("xcertplay_airplay").contains(key))
+            }
+            prefs("xcertplay_airplay").edit().clear().commit()
+            assertEquals(key, 1, import(key, "true").applied)
+        }
+        assertTrue(AirPlayPersistence.loadFitScreenShape(context))
+        // Read with getInt.
+        for (wrong in listOf("\"-6\"", "-6.5", "true")) {
+            prefs("xcertplay_airplay").edit().clear().commit()
+            val outcome = import("call_audio_attenuation_db", wrong)
+            assertEquals(wrong, 0, outcome.applied)
+            assertEquals(wrong, 1, outcome.skipped)
+            assertEquals(wrong, 0, AirPlayPersistence.loadCallAudioAttenuationDb(context))
+        }
+        prefs("xcertplay_airplay").edit().clear().commit()
+        assertEquals(1, import("call_audio_attenuation_db", "-6").applied)
+        assertEquals(-6, AirPlayPersistence.loadCallAudioAttenuationDb(context))
+    }
+
+    @Test
+    fun aStoredDeclaredKeyStillRejectsAWrongType() {
+        AirPlayPersistence.saveHevcEnabled(context, false)
+        AirPlayPersistence.saveFps(context, 30)
+        val fpsBefore = AirPlayPersistence.loadFps(context)
+        val document = """
+            {"format": "diplay-settings", "version": 1, "settings": {
+              "xcertplay_airplay": {"hevc_enabled": "yes", "display_fps": "60"}
+            }}
+        """.trimIndent()
+        val outcome = SettingsBackupCodec.import(context, document.toByteArray())
+        assertEquals(0, outcome.applied)
+        assertEquals(2, outcome.skipped)
+        assertFalse(AirPlayPersistence.loadHevcEnabled(context))
+        assertEquals(fpsBefore, AirPlayPersistence.loadFps(context))
+    }
+
+    @Test
+    fun declaredBooleanAndIntSettingsSurviveAFreshRoundTrip() {
+        AirPlayPersistence.saveHevcEnabled(context, true)
+        AirPlayPersistence.saveFps(context, 60)
+        AirPlayPersistence.saveDisplayScalePercent(context, 85)
+        val expectedFps = AirPlayPersistence.loadFps(context)
+        val document = SettingsBackupCodec.export(context, "0.2.23")
+        prefs("xcertplay_airplay").edit().clear().commit()
+
+        assertFalse(SettingsBackupCodec.import(context, document).invalid)
+
+        assertTrue(AirPlayPersistence.loadHevcEnabled(context))
+        assertEquals(expectedFps, AirPlayPersistence.loadFps(context))
+        assertEquals(85, AirPlayPersistence.loadDisplayScalePercent(context))
+    }
+
+    @Test
+    fun aFreshInstallRejectsWronglyTypedStringAndDiplayValues() {
+        prefs("xcertplay_airplay").edit().clear().commit()
+        prefs("diplay").edit().clear().commit()
+        val document = """
+            {"format": "diplay-settings", "version": 1, "settings": {
+              "xcertplay_airplay": {
+                "app_appearance": 1, "carplay_night_mode": true, "carplay_night_start_minute": "x"
+              },
+              "diplay": {"auto_connect": "yes", "default_connection_mode": 2}
+            }}
+        """.trimIndent()
+        val outcome = SettingsBackupCodec.import(context, document.toByteArray())
+        assertEquals(false, outcome.invalid)
+        assertEquals(0, outcome.applied)
+        assertEquals(5, outcome.skipped)
+        assertFalse(prefs("xcertplay_airplay").contains("app_appearance"))
+        assertFalse(prefs("xcertplay_airplay").contains("carplay_night_mode"))
+        assertFalse(prefs("xcertplay_airplay").contains("carplay_night_start_minute"))
+        assertFalse(prefs("diplay").contains("auto_connect"))
+        assertFalse(prefs("diplay").contains("default_connection_mode"))
+        // None of these readers may throw ClassCastException on the cleared files.
+        AirPlayPersistence.loadAppAppearance(context)
+        AirPlayPersistence.loadCarPlayNightMode(context)
+        AirPlayPersistence.loadCarPlayNightSchedule(context)
+        DiPlayPreferences.autoConnect(context)
+        DiPlayPreferences.defaultConnectionMode(context)
     }
 }

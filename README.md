@@ -51,6 +51,7 @@ Ordinary source/CI builds omit CarPlay authentication assets. For a complete loc
 - [Interface and component specification](docs/design/ZEEKR-OS72-HMI.md)
 
 For a connection or integration issue, export a report from **Settings → Diagnostics** and include the vehicle model, full OS/firmware version, iPhone/iOS version, connection mode, reproduction steps and failure time. Review the report before sharing it.
+The app and the website include English, Arabic, Russian, Ukrainian, Spanish, Simplified Chinese, Traditional Chinese (Taiwan), Japanese, Italian, Korean and Turkish; the app is also available in French. Traditional Chinese uses Taiwan wording; the app also recognizes Hong Kong/Macao and explicit Hant selections without claiming separate regional translations. Choose the app language in Settings; on Android 13+, it stays synchronized with Android’s per-app language setting. See the [Traditional Chinese guide](README.zh-TW.md) for installation, settings, troubleshooting, privacy and build instructions.
 
 ## Source and licenses
 

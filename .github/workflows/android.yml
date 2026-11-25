@@ -20,6 +20,22 @@ jobs:
           python3 scripts/check_public_tree.py
           python3 -m unittest discover -s scripts/tests -p 'test_public_tree.py'
           python3 scripts/sync_zeekr_branding.py --check
+      - name: Restore Robolectric Android jars
+        id: robolectric-sdks
+        uses: actions/cache/restore@v6
+        with:
+          path: ~/.m2/repository/org/robolectric/android-all-instrumented
+          key: robolectric-sdks-${{ hashFiles('gradle/robolectric-sdks.sha512') }}
+      - name: Check Robolectric Android jars and download missing ones
+        timeout-minutes: 10
+        run: python3 scripts/fetch_robolectric_sdks.py
+      # Pull requests read the cache from main. A copy for each pull request would fill the cache quota.
+      - name: Save Robolectric Android jars
+        if: github.event_name != 'pull_request' && steps.robolectric-sdks.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: ~/.m2/repository/org/robolectric/android-all-instrumented
+          key: ${{ steps.robolectric-sdks.outputs.cache-primary-key }}
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -37,6 +53,9 @@ jobs:
         run: |
           ./gradlew :vehicleprobe:testDebugUnitTest :vehicleprobe:lintDebug :vehicleprobe:assembleDebug
           python3 scripts/verify_vehicle_probe_apk.py vehicleprobe/build/outputs/apk/debug/vehicleprobe-debug.apk
+      - name: Report Robolectric jars that are not in the list
+        if: always()
+        run: python3 scripts/fetch_robolectric_sdks.py --report-unlisted
       - name: Test reports
         if: always()
         uses: actions/upload-artifact@v4
