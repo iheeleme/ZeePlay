@@ -142,15 +142,16 @@ internal object ZeekrClusterCall {
     }
 
     /**
-     * The wheel's and the cluster's mute key. Like the car's own phone: 0 unmutes, 1 mutes, anything else
-     * toggles. CarPlay's Phone Mute is a toggle and the iPhone does not report the mute back here, so the
+     * The wheel's and the cluster's mute key. Like the car's own phone (InCallService.setMuted): 0 mutes,
+     * 1 unmutes, anything else toggles. The cluster sends the state it wants from isMicOnVehicleMuted, so the
+     * wheel sends 0 while the call is not muted and 1 while it is. CarPlay's Phone Mute is a toggle and the iPhone does not report the mute back here, so the
      * state is ZeePlay's own and is sent only when it has to change; it resets with each call.
      */
     private fun switchMute(controller: com.shilapi.xcertplay.orchestration.CarPlayController, current: CarPlayCallCard, mode: Int?) {
         if (current.phase != CarPlayCallCard.Phase.ACTIVE) return
         val wanted = when (mode) {
-            0 -> false
-            1 -> true
+            0 -> true
+            1 -> false
             else -> !micMuted
         }
         if (wanted == micMuted) { send(); return }
