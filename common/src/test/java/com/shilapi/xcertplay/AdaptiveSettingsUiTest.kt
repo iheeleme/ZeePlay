@@ -865,6 +865,8 @@ class AdaptiveSettingsUiTest {
 
     // #1327: off BYD units the DiLink 4 routes find no projection display and only cost a stream nobody sees.
     @Test fun diLink4ClusterRoutesLiveInAdvancedOnlyOnBydHeadUnits() {
+        // BYD-only settings; the Zeekr edition has its own pages.
+        org.junit.Assume.assumeFalse(com.shilapi.xcertplay.host.BuildConfig.IS_ZEEKR)
         val screen = openSettings()
         val routes = listOf(R.string.adb_cluster_activity_mode, R.string.platform21_cluster_mode).map(screen::getString)
         fun index() = ReflectionHelpers.callInstanceMethod<List<DiPlayActivity.SettingsSearchResult>>(

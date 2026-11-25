@@ -668,8 +668,8 @@ class AndroidMediaSink(
             runCatching {
                 onAudioDiagnostic("Audio: mode entered communication from=$before" +
                     " now=${manager.mode} stream=$id" +
-                    (if (speakerRequested) " loudspeaker=${callSpeaker != null}" else "") +
-                    (if (focusResult != null) " callFocus=$focusResult" else ""))
+                    (if (focusResult != null) " callFocus=$focusResult" else "") +
+                    (if (speakerRequested) " loudspeaker=${callSpeaker != null}" else ""))
             }
         }
     }

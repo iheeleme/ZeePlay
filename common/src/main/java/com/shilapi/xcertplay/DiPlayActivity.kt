@@ -2279,7 +2279,8 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
                     getString(R.string.settings_navigation_attenuation_value, db)
             }
             card.addView(callSlider)
-            card.addView(label(getString(R.string.settings_call_attenuation_description), 14, MUTED).apply {
+            card.addView(label(getString(if (BuildConfig.IS_ZEEKR) R.string.settings_call_attenuation_description_zeekr
+                else R.string.settings_call_attenuation_description), 14, MUTED).apply {
                 setPadding(0, dp(SETTINGS_BLOCK_GAP_DP), 0, 0)
             })
             musicBufferChoice(card, wireless = true)
@@ -7531,6 +7532,16 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
             val lp = child.layoutParams as? LinearLayout.LayoutParams ?: continue
             when {
                 child is Button -> {
+                    // Zeekr cards that are not run through applySettingsButtonHeights still get its sizing.
+                    if (BuildConfig.IS_ZEEKR) {
+                        child.minHeight = dp(CONTROL_MIN_HEIGHT_DP)
+                        val verticalPadding = dp(SETTINGS_BUTTON_VERTICAL_PADDING_DP)
+                        child.setPaddingRelative(
+                            child.paddingStart, maxOf(child.paddingTop, verticalPadding),
+                            child.paddingEnd, maxOf(child.paddingBottom, verticalPadding),
+                        )
+                        lp.height = ViewGroup.LayoutParams.WRAP_CONTENT
+                    }
                     lp.topMargin = 0
                     lp.bottomMargin = dp(if (isNote(next)) NOTE_ATTACH_GAP_DP else CONTROL_GAP_DP)
                 }

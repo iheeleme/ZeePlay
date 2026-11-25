@@ -43,6 +43,8 @@ class AmbientAlbumUiScreenshotsTest {
 
     @Test
     fun lightingCardHasAnIconAtCompactFullAndRtlWidths() {
+        // BYD-only settings; the Zeekr edition has its own pages.
+        org.junit.Assume.assumeFalse(com.shilapi.xcertplay.host.BuildConfig.IS_ZEEKR)
         for ((name, widthDp, language) in listOf(
             Triple("card-compact", 320, "zh-rTW"),
             Triple("card-full", 960, "zh-rTW"),
