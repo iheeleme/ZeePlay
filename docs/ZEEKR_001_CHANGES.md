@@ -52,6 +52,18 @@ seconds.
   buffered audio to real playout, so the media stream stops tearing down
   (`41156f1e`, `ce197199`).
 
+## CarPlay calls
+
+- Echo cancelling stays on while the car Bluetooth is paused: the call keeps the voice-communication path
+  instead of plain speakerphone.
+- The call holds call audio focus, so the car's volume keys control the call volume (BUS03_PHONE), not the
+  voice assistant. The report shows `callFocus=`.
+- The call shows on the instrument cluster through the ECARX `IPhoneCallInteraction` (incoming, outgoing,
+  connected, with the caller and the call time), and the cluster's answer and hang-up buttons act on the
+  iPhone call. The report shows `Cluster call:` lines.
+- The wheel's (and the cluster's) mute key mutes the iPhone's microphone during a connected call (CarPlay
+  Phone Mute), and the cluster shows the mute.
+
 ## Wireless connection / car hotspot
 
 - Read the car hotspot credentials directly on Zeekr (platform-signed builds),

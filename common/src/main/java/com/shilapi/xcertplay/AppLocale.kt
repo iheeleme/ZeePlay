@@ -26,8 +26,10 @@ object AppLocale {
 
     const val ITALIAN = "it"
     const val TURKISH = "tr"
+    const val VIETNAMESE = "vi"
+    const val FRENCH = "fr"
 
-    val ALL = listOf(SYSTEM, ENGLISH, SIMPLIFIED_CHINESE, TRADITIONAL_CHINESE, ARABIC, RUSSIAN, SPANISH, UKRAINIAN, JAPANESE, KOREAN, ITALIAN, TURKISH)
+    val ALL = listOf(SYSTEM, ENGLISH, SIMPLIFIED_CHINESE, TRADITIONAL_CHINESE, ARABIC, RUSSIAN, SPANISH, UKRAINIAN, JAPANESE, KOREAN, ITALIAN, TURKISH, VIETNAMESE, FRENCH)
 
     private const val PREFS = "diplay"
     private const val KEY_LANGUAGE = "app_language"
@@ -144,10 +146,12 @@ object AppLocale {
         KOREAN -> "한국어"
         ITALIAN -> "Italiano"
         TURKISH -> "Türkçe"
+        VIETNAMESE -> "Tiếng Việt"
+        FRENCH -> "Français"
         else -> language
     }
 
-    private fun locale(language: String): Locale? = when (language) {
+    internal fun locale(language: String): Locale? = when (language) {
         ENGLISH -> Locale.ENGLISH
         SIMPLIFIED_CHINESE -> Locale.SIMPLIFIED_CHINESE
         TRADITIONAL_CHINESE -> Locale.TRADITIONAL_CHINESE
@@ -159,6 +163,8 @@ object AppLocale {
         KOREAN -> Locale.KOREAN
         ITALIAN -> Locale.ITALIAN
         TURKISH -> Locale("tr")
+        VIETNAMESE -> Locale("vi")
+        FRENCH -> Locale.FRENCH
         else -> null
     }
 }

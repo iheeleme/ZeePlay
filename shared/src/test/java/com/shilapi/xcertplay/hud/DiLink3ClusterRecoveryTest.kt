@@ -44,6 +44,8 @@ class DiLink3ClusterRecoveryTest {
     }
 
     @Test fun appOpeningRecoversAnInterruptedClusterEvenWhenNavigationIsDisabled() {
+        // DiLink 3 (BYD) cluster recovery; the Zeekr edition starts no BYD outputs.
+        org.junit.Assume.assumeFalse(com.shilapi.xcertplay.SharedEdition.ZEEKR)
         prefs.edit().putBoolean("restore_stock_mode", true).commit()
         BydOutputSettings.setEnabled(app, false)
         Shell.response = { null }

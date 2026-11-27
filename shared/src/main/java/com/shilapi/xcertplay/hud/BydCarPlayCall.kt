@@ -91,7 +91,9 @@ class CarPlayCallState(private val clock: () -> Long = System::currentTimeMillis
         const val MAX_NAME_BYTES = 60
 
         fun nameBytes(name: String): ByteArray {
-            var end = name.length
+            // At most cap / 2 code units fit. Start two past that so the loop still checks for
+            // a split surrogate at the cut, without recopying the prefix for every character.
+            var end = minOf(name.length, MAX_NAME_BYTES / 2 + 2)
             while (name.substring(0, end).toByteArray(Charsets.UTF_16LE).size > MAX_NAME_BYTES) {
                 end--
                 if (end > 0 && Character.isLowSurrogate(name[end])) end--
@@ -155,6 +157,7 @@ object BydCarPlayCall {
         }
         Log.i(TAG, "CarPlay call ${card?.phase ?: "ended"}")
         PhoneAudioRoute.carPlayCall(card != null)
+        CarPlayCallEvents.publish(card)
         val app = context ?: return
         if (BydOutputSettings.carPlayCalls(app)) writer.execute { apply(app, card); if (card == null) arm(app) }
     }
@@ -175,6 +178,7 @@ object BydCarPlayCall {
         sessionActive = false
         PhoneAudioRoute.carPlayCall(false)
         synchronized(state) { state.clear() }
+        CarPlayCallEvents.publish(null)
         val app = context ?: return
         writer.execute { resetRetry(null); apply(app, null); disarm(app) }
     }
