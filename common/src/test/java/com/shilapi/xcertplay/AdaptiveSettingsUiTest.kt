@@ -667,6 +667,8 @@ class AdaptiveSettingsUiTest {
     }
 
     @Test fun aRowBeforeAButtonKeepsTheGap() {
+        // Checks the BYD brand badge row, which the Zeekr edition does not show.
+        org.junit.Assume.assumeFalse(com.shilapi.xcertplay.host.BuildConfig.IS_ZEEKR)
         val screen = openSettings()
         descendants(screen.window.decorView)
             .first { it.contentDescription == screen.getString(R.string.settings_open_category,

@@ -23,6 +23,8 @@ import org.robolectric.shadows.ShadowAlertDialog
 class CarBrandBadgePickerTest {
 
     @Test fun eachBadgeSendsItsPackagedIconToTheIphone() {
+        // The BYD brand badges are not offered in the Zeekr edition (90e73cd6).
+        org.junit.Assume.assumeFalse(com.shilapi.xcertplay.host.BuildConfig.IS_ZEEKR)
         val activity = Robolectric.buildActivity(CarPlayHostActivity::class.java).get()
         activity.setTheme(android.R.style.Theme_Material_NoActionBar)
         fun defaultIconBytes(): ByteArray =
@@ -44,6 +46,8 @@ class CarBrandBadgePickerTest {
     }
 
     @Test fun pickingABadgeKeepsANameTheUserTyped() {
+        // The BYD brand badges are not offered in the Zeekr edition (90e73cd6).
+        org.junit.Assume.assumeFalse(com.shilapi.xcertplay.host.BuildConfig.IS_ZEEKR)
         val activity = newHome()
         AirPlayPersistence.saveCarBrand(activity, CarBrandBadge.DEFAULT.key)
         AirPlayPersistence.saveOemLabel(activity, "Seal")
@@ -62,6 +66,8 @@ class CarBrandBadgePickerTest {
     }
 
     @Test fun savingWithoutChangingTheSelectionKeepsTheCustomImage() {
+        // The BYD brand badges are not offered in the Zeekr edition (90e73cd6).
+        org.junit.Assume.assumeFalse(com.shilapi.xcertplay.host.BuildConfig.IS_ZEEKR)
         val activity = newHome()
         try {
             AirPlayPersistence.saveCarBrand(activity, CarBrandBadge.DEFAULT.key)
@@ -80,6 +86,8 @@ class CarBrandBadgePickerTest {
     }
 
     @Test fun pickingABadgeUpdatesTheDefaultNameWithTheLocalizedBadgeName() {
+        // The BYD brand badges are not offered in the Zeekr edition (90e73cd6).
+        org.junit.Assume.assumeFalse(com.shilapi.xcertplay.host.BuildConfig.IS_ZEEKR)
         val activity = newHome()
         try {
             AirPlayPersistence.saveCarBrand(activity, CarBrandBadge.DEFAULT.key)
