@@ -75,14 +75,20 @@ class ZeekrVehicleSettingsTest {
                 assertTrue(control.width > 0 && control.height > 0)
                 assertTrue(control.left >= 0 && control.right <= (control.parent as View).width)
             }
-            assertFalse(com.shilapi.xcertplay.hud.BydOutputSettings.batteryToIphone(activity))
-            assertFalse(com.shilapi.xcertplay.hud.BydOutputSettings.wheelSpeedToIphone(activity))
+            // Battery and wheel speed to the iPhone are on by default in the Zeekr edition.
+            assertTrue(com.shilapi.xcertplay.hud.BydOutputSettings.batteryToIphone(activity))
+            assertTrue(com.shilapi.xcertplay.hud.BydOutputSettings.wheelSpeedToIphone(activity))
+            assertTrue(controls.all { it.isChecked })
             val image = Bitmap.createBitmap(width, content.height, Bitmap.Config.ARGB_8888)
             try {
                 content.draw(Canvas(image))
                 val directory = File("build/reports/zeekr-vehicle-ui").apply { mkdirs() }
                 File(directory, "$name.png").outputStream().use { assertTrue(image.compress(Bitmap.CompressFormat.PNG, 100, it)) }
             } finally { image.recycle() }
+            controls[0].isChecked = false
+            controls[1].isChecked = false
+            assertFalse(com.shilapi.xcertplay.hud.BydOutputSettings.batteryToIphone(activity))
+            assertFalse(com.shilapi.xcertplay.hud.BydOutputSettings.wheelSpeedToIphone(activity))
             controls[0].isChecked = true
             controls[1].isChecked = true
             assertTrue(com.shilapi.xcertplay.hud.BydOutputSettings.batteryToIphone(activity))

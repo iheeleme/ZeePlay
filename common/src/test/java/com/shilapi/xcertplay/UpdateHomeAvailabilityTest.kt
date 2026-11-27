@@ -29,6 +29,8 @@ class UpdateHomeAvailabilityTest {
     @Test fun cachedUpdateAppearsBelowTheVersionAndOpensTheExistingDownloadFlow() {
         val release = release()
         UpdateAvailability.save(application, release)
+        // The dark palette is checked below; the Zeekr edition defaults to AUTO.
+        AirPlayPersistence.saveAppAppearance(application, AppAppearance.DARK)
         val controller = Robolectric.buildActivity(DiPlayActivity::class.java).setup()
         val activity = controller.get()
         val text = activity.getString(R.string.update_available_home)

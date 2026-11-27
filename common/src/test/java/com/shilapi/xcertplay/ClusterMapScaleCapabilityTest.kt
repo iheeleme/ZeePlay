@@ -80,6 +80,8 @@ class ClusterMapScaleCapabilityTest {
     }
 
     @Test fun smallerDilink3ProjectionAdvertisesItsPanelAndIgnoresThe1920Calibration() {
+        // DiLink cluster projection; not used in the Zeekr edition.
+        org.junit.Assume.assumeFalse(com.shilapi.xcertplay.host.BuildConfig.IS_ZEEKR)
         projectionDisplay(1280, 480)
         AirPlayPersistence.saveClusterContent(activity, CarPlayClusterDisplay.Content.INSTRUMENTS)
         AirPlayPersistence.saveClusterMarkerHorizontalStep(activity, 1)
@@ -97,6 +99,8 @@ class ClusterMapScaleCapabilityTest {
     }
 
     @Test fun measuredDilink4ProjectionRetainsItsSaved1920Calibration() {
+        // DiLink cluster projection; not used in the Zeekr edition.
+        org.junit.Assume.assumeFalse(com.shilapi.xcertplay.host.BuildConfig.IS_ZEEKR)
         projectionDisplay(1920, 720)
         val rect = SafeAreaRect(300, 100, 1500, 620)
         AirPlayPersistence.saveClusterSafeAreaRect(activity, rect)
@@ -105,6 +109,8 @@ class ClusterMapScaleCapabilityTest {
     }
 
     @Test fun measuredDilink4ProjectionFollowsTheMarkerSliders() {
+        // DiLink cluster projection; not used in the Zeekr edition.
+        org.junit.Assume.assumeFalse(com.shilapi.xcertplay.host.BuildConfig.IS_ZEEKR)
         projectionDisplay(1920, 720)
         val centred = cluster(100)
         assertEquals(DiLink4ClusterDisplay.streamConfig(CarPlayClusterDisplay.Content.MAP,

@@ -66,6 +66,9 @@ seconds.
 
 ## Wireless connection / car hotspot
 
+For a build without the car's platform signature, the permissions to grant over ADB and where to get the
+hotspot details: [ZEEKR_ADB_PERMISSIONS.md](ZEEKR_ADB_PERMISSIONS.md).
+
 - Read the car hotspot credentials directly on Zeekr (platform-signed builds),
   and fall back to manual entry when the build is not platform-signed on that
   car — no ADB, and the car hotspot is never written to (`fd3c9be0`). See

@@ -30,8 +30,10 @@ class SystemBarSettingsTest {
     @Test fun settingsExposeTwoIndependentSwitchesWithTheExistingDefaults() {
         openSettings()
 
-        assertTrue(statusBarSwitch().isChecked)
-        assertTrue(navigationBarSwitch().isChecked)
+        // Hidden by default; the Zeekr edition shows the car's bars over CarPlay by default.
+        val hiddenByDefault = !com.shilapi.xcertplay.host.BuildConfig.IS_ZEEKR
+        assertEquals(hiddenByDefault, statusBarSwitch().isChecked)
+        assertEquals(hiddenByDefault, navigationBarSwitch().isChecked)
         assertFalse(descendants(activity.window.decorView).filterIsInstance<Switch>()
             .any { it.contentDescription == activity.getString(R.string.full_screen) })
     }
@@ -54,6 +56,7 @@ class SystemBarSettingsTest {
     }
 
     @Test fun togglingEitherBarPreservesTheOtherPreferenceAndSwitch() {
+        hideBothBars()
         openSettings()
 
         statusBarSwitch().performClick()
@@ -67,6 +70,7 @@ class SystemBarSettingsTest {
     }
 
     @Test fun hidingOnlyTheStatusBarSurvivesRecreation() {
+        hideBothBars()
         openSettings()
         navigationBarSwitch().performClick()
 
@@ -105,6 +109,12 @@ class SystemBarSettingsTest {
 
         assertTrue(harmanSwitch.isChecked)
         assertTrue(AirPlayPersistence.loadHarmanFullscreen(context))
+    }
+
+    /** Both bars hidden, saved explicitly: the default differs between editions. */
+    private fun hideBothBars() {
+        AirPlayPersistence.saveHideTopBar(context, true)
+        AirPlayPersistence.saveHideBottomBar(context, true)
     }
 
     private fun openSettings() {

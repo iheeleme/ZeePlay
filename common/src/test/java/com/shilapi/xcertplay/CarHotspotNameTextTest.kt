@@ -28,6 +28,8 @@ class CarHotspotNameTextTest {
 
     @Before fun setUp() {
         clearSettings()
+        // The car hotspot stays off: ZeePlay does not start it (on by default in the Zeekr edition).
+        com.shilapi.xcertplay.network.CarHotspotSettings.setEnabled(context, false)
         // The car hotspot is off, as on a head unit that has just been switched on.
         context.sendStickyBroadcast(Intent("android.net.wifi.WIFI_AP_STATE_CHANGED")
             .putExtra("wifi_state", 11).putExtra("wifi_ap_mode", 1))

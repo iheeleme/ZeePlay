@@ -138,6 +138,8 @@ class AdaptiveSettingsUiTest {
     }
 
     @Test fun headerShortcutTogglesAppearanceAndReturnsFocusToItself() {
+        // Starts from the standard dark theme; the Zeekr default is AUTO (no "switch to light" shortcut).
+        AirPlayPersistence.saveAppAppearance(context, AppAppearance.DARK)
         val screen = openSettings()
         val switchToLight = screen.getString(R.string.settings_switch_to_light_appearance)
         val button = descendants(screen.window.decorView).single {
@@ -199,6 +201,8 @@ class AdaptiveSettingsUiTest {
     @Test
     @Config(sdk = [29], qualifiers = "en-w500dp-h400dp")
     fun appearanceRepaintKeepsTheCurrentSettingsPageAndScrollPosition() {
+        // Starts from the standard dark theme; the Zeekr default is AUTO (no "switch to light" shortcut).
+        AirPlayPersistence.saveAppAppearance(context, AppAppearance.DARK)
         val screen = openSettings()
         descendants(screen.window.decorView).single {
             it.contentDescription == screen.getString(
@@ -663,6 +667,8 @@ class AdaptiveSettingsUiTest {
     }
 
     @Test fun aRowBeforeAButtonKeepsTheGap() {
+        // Checks the BYD brand badge row, which the Zeekr edition does not show.
+        org.junit.Assume.assumeFalse(com.shilapi.xcertplay.host.BuildConfig.IS_ZEEKR)
         val screen = openSettings()
         descendants(screen.window.decorView)
             .first { it.contentDescription == screen.getString(R.string.settings_open_category,

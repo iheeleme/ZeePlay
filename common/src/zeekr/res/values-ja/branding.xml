@@ -35,7 +35,7 @@
     <string name="default_connection_description">ZeePlay起動時に標準の接続方法と選択したiPhoneを使用します。手動接続ボタンからは指定した方式で接続できます。</string>
     <string name="diagnostic_report_saved_in_app">公開の保存先を使用できなかったため、レポートをZeePlay内に非公開で保存しました。ここから表示または共有できます。自動送信はされません。</string>
     <string name="diplay">ZeePlay</string>
-    <string name="existing_wifi_instructions">車載端末とiPhoneをシステム設定で同じWi-Fiに接続してください。下に正確なネットワーク名とWPA2パスワードを入力します。パスワードを空にできるのはオープンネットワークだけです。ルーターはWPA2またはWPA2/WPA3混在モードを使用し、クライアント分離を無効にしてください。ZeePlayは既存のWi-Fiを使い、ホットスポットを作成しません。</string>
+    <string name="existing_wifi_instructions">車載端末とiPhoneをシステム設定で同じWi-Fiに接続してください。下に正確なネットワーク名とWPA2パスワードを入力します。パスワードのないオープンネットワークは使えません。iPhoneはパスワード付きのネットワークでしかワイヤレスCarPlayを開始しないためです。ルーターはWPA2またはWPA2/WPA3混在モードを使用し、クライアント分離を無効にしてください。ZeePlayは既存のWi-Fiを使い、ホットスポットを作成しません。</string>
     <string name="hide_the_car_s_system_bars_while_carplay_is_open">ZeePlayとCarPlayで選択したシステムバーを非表示にします。</string>
     <string name="hotspot_interface_not_found">ZeePlayに保存されたホットスポットのインターフェースがこの車にありません</string>
     <string name="hotspot_join_off_required">ホットスポットをオフにしたことを確認できません。接続中の端末を切断し、車の設定でオフにして再試行してください。ZeePlayは自動再起動しません。</string>
@@ -58,7 +58,7 @@
     <string name="settings_ambient_car_rhythm_unavailable">車両の音楽リズムは使用できません。ZeePlay 自身では開始できず、さらに ZeePlay のネットワーク ADB アクセス、またはヘッドユニットのオーディオサービス呼び出しがありません。何も保存されていません。</string>
     <string name="settings_auto_car_hotspot_system_description">ZeePlay を開いたときとワイヤレス接続の前に、保存済みの車のホットスポットをオンにします。Android の「システム設定の変更」へのアクセスが必要です。ADB は不要です。完全に再起動した後もホットスポットを使うには、車の起動後に ZeePlay を開く設定もオンにしてください。ホットスポットは自動ではオフになりません。</string>
     <string name="settings_auto_car_hotspot_vehicle_description">ZeePlay を開いたときや戻ったとき、無線接続の前に、車載サービスでホットスポットの起動を試みます。このサービスには ADB やシステム設定の変更権限は不要です。対応状況は車載機のファームウェアによって異なります。ホットスポットは自動でオフになりません。</string>
-    <string name="settings_car_bluetooth_audio_description">ZeePlayがiPhoneにCarPlay音声の出力先を提供しないことで、音楽・ナビ・通話を車とiPhoneのBluetooth接続で再生します。iPhoneを車とペアリングしたまま、車の音声入力をBluetoothにしてください。音がiPhone本体から出る場合はオフにしてください。CarPlayを再接続します。</string>
+    <string name="settings_car_bluetooth_audio_description">ZeePlayがiPhoneにCarPlay音声の出力先を提供しないことで、音楽・ナビ・通話を車とiPhoneのBluetooth接続で再生します。iPhoneを車とペアリングしたまま、車の音声入力をBluetoothにしてください。音がiPhone本体から出る場合はオフにしてください。セッション中にこの変更を適用すると、CarPlayを再接続します。</string>
     <string name="settings_car_hotspot_config_description">ホットスポット情報を手入力する必要はありません。車のホットスポット情報を取り込みます。車に情報がない場合は、確認のうえで ZeePlay の情報が書き込まれ、このホットスポットを使用しているデバイスは再接続が必要になることがあります。Android 11 以降ではADBが必要で、Android 8〜10では利用できません。</string>
     <string name="settings_car_hotspot_config_dialog_generate_message">車のホットスポット設定を読み取れず、ZeePlay にも保存された情報がありません。続行すると、車に新しいホットスポット名とパスワードが作成され、他のデバイスは新しいパスワードを入力する必要があります。</string>
     <string name="settings_car_hotspot_config_dialog_message">車に保存されているホットスポット設定を読み取れませんでした。続行すると、ZeePlay のホットスポット情報で上書きします。ホットスポットの名前は変わる可能性があり、パスワードは置き換えられます。接続済みの他のデバイスはパスワードを再入力する必要があります。</string>
@@ -66,9 +66,12 @@
     <string name="settings_car_hotspot_config_failed">ZeePlay は車のホットスポット設定を書き込めませんでした。名前とパスワードは変更されていません。</string>
     <string name="settings_car_hotspot_config_open">ZeePlayのオープンホットスポットは車載のパスワードを上書きしません。</string>
     <string name="settings_car_hotspot_config_written">車のホットスポットは ZeePlay のパスワードを使用するようになりました。</string>
+    <string name="settings_car_hotspot_scan_pause_description">一部のヘッドユニットは車のホットスポットと並行して自身のWi-Fiクライアントをオンのままにし、定期的にネットワークを検索します。検索のたびに音楽が短く途切れます。オンにすると、そのようなユニットでのみ、CarPlayの動作中はZeePlayがこの検索を一時停止します。その間、車はスマートフォンのテザリングなどの既知のネットワークにも自動で接続しません。自動接続させるにはオフにしてください。次回の接続から有効になります。</string>
+    <string name="settings_car_music_link_drop_description">一部のヘッドユニットでは、車自身のiPhoneとのBluetoothミュージック接続が、CarPlayの音楽を再生直後に一時停止させます。オンにすると、CarPlayの動作中はこのセッションのiPhoneとのミュージック接続だけをZeePlayが切断し、CarPlayの終了時に再接続を試みます。一部のヘッドユニットではそれができず、CarPlayの終了後も車のBluetoothミュージックが切断されたままになることがあります。車のBluetoothでの通話とペアリングはそのままです。CarPlayの音声を車のBluetoothで再生している場合は何もしません。ケーブル接続ではZeePlayで選んだiPhoneを使います。次回の接続から有効になります。</string>
     <string name="settings_carplay_same_task_description">ZeePlayをカードやピクチャーインピクチャーのウィンドウで表示するランチャー（BYDのDiYouデスクトップなど）向けです。CarPlayを別の全画面ではなく、0.2.11以前と同じくZeePlay自身のウィンドウで開きます。次にCarPlayを開いたときに反映され、接続は切れません。</string>
     <string name="settings_connecting_description">ZeePlayがiPhoneとのCarPlay接続を開始しています。</string>
-    <string name="settings_direct_video_output_description">ZeePlay画面内に描画せず、車載端末のコンポジターへCarPlay映像を直接送ります。画面更新1回分ほどの遅延を減らせる場合があります。画質調整は適用されません。CarPlayを再接続します。</string>
+    <string name="settings_declare_automatic_appearance_description">iPhoneの接続時に、CarPlayとその地図がライト／ダークを自動で選ぶことを通知します。ZeePlay 0.2.16以降と同じ動作です。CarPlayが「CarPlayの昼／夜モード」の設定に従わない場合は、オフにしてください。次回の接続から反映されます。</string>
+    <string name="settings_direct_video_output_description">ZeePlay画面内に描画せず、車載端末のコンポジターへCarPlay映像を直接送ります。画面更新1回分ほどの遅延を減らせる場合があります。画質調整は適用されません。次回の接続から反映されます。</string>
     <string name="settings_disable_media_key_audio_focus_description">CarPlayで音楽再生中、ZeePlayがメディアのオーディオフォーカスを要求しないようにします。車の物理音量キーがZeePlayに割り当てられ、音量調整できなくなる場合に使用してください。ステアリングの再生・停止・曲送りが動作しなくなる場合があります。</string>
     <string name="settings_full_screen_description">ZeePlayとCarPlayのステータスバーとナビゲーションバーを非表示にします。</string>
     <string name="settings_hide_byd_call_popup_description">Android 12LのBYDのみ対応。許可済みローカルADBが必要です。CarPlayが前面に表示されている間は車両純正の着信ポップアップを非表示にし、ZeePlayがバックグラウンドになると元に戻します。Bluetooth通話の音声経路や電話アプリ自体は変更しません。</string>
@@ -76,7 +79,12 @@
     <string name="settings_language_summary">ZeePlayで使用する言語を選択</string>
     <string name="settings_launcher_bubble_description">車載機のホーム画面に ZeePlay のアイコンをバブルとして表示します。タップすると CarPlay に戻り、ドラッグでどこへでも移動できます。ZeePlay の画面を開くと隠れ、離れると再び表示されます。長押しで位置をロックし、もう一度長押しで解除します。「他のアプリの上に重ねて表示」が必要です。</string>
     <string name="settings_navigation_prompt_audio_focus_description">「オーディオフォーカス」設定とは独立して動作します。CarPlayのナビ音声案内のたびに、ZeePlayは他の音を下げられる一時的なオーディオフォーカスを要求し、案内の終了後に解放します。音楽を再生するまで案内が聞こえない場合や、案内中に音楽を小さくしたい場合に使用してください。案内中は車両側の音声が小さくなったり一時停止したりすることがあります。次回のCarPlay接続時に適用されます。</string>
-    <string name="settings_usb_charging_description">ZeePlayがUSB接続でiPhoneに提供する充電電流を設定します。有線CarPlayが数秒ごとに切断・再接続される場合は、車のUSBポートの電力不足が考えられます。「低減」、次に「低」を試してください。充電速度は遅くなります。次回のUSB接続から反映されます。</string>
+    <string name="settings_usb_charging_description">ZeePlayがUSB接続でiPhoneに提供する充電電流を設定します。有線CarPlayが数秒ごとに切断・再接続される場合は、車のUSBポートの電力不足が考えられます。「低め」、「中」、「低」の順に試してください。充電速度は遅くなります。次回のUSB接続から反映されます。</string>
+    <string name="settings_wheel_keys_restart">ZeePlayを再起動してサービスを開始 · ADB</string>
+    <string name="settings_wheel_keys_restart_confirm">ZeePlayを再起動</string>
+    <string name="settings_wheel_keys_restart_description">ZeePlayはサービスを再び許可しましたが、Androidが起動しませんでした。車のADBでZeePlayを再起動すると解決する場合があります。CarPlayは切断されます。</string>
+    <string name="settings_wheel_keys_restart_message">ZeePlayはいったん終了し、再び開きます。CarPlayが接続中の場合は切断されます。必ず停車中に行ってください。成功すると、ZeePlayが開いてから約10秒でステアリングスイッチが使えるようになります。\n\n一度成功すると、車の始動時にZeePlayが開き、サービスが再び止まっている場合、ZeePlayが同じ操作を自動で行います。始動ごとに1回、CarPlayの接続前に限ります。</string>
+    <string name="settings_wheel_keys_restart_title">ZeePlayを再起動しますか？</string>
     <string name="settings_wifi_direct_scan_pause_description">Wi-Fi Directでは車が数秒ごとにWi-Fiネットワークを検索し、そのたびに音楽と映像が途切れます。オンにすると、CarPlayの実行中はZeePlayがこの検索を止めます。その間、車はスマートフォンのテザリングなど既知のネットワークにも自動では接続しません（車のWi-Fi設定から手動では接続できます）。自動で接続させたい場合はオフにしてください。次の接続から適用されます。</string>
     <string name="settings_write_settings_missing">「システム設定の変更」へのアクセスがまだ許可されていません。ZeePlay がホットスポットをオンにできるよう許可してください。</string>
     <string name="setup_error_auth">CarPlayの認証情報を読み込めませんでした。完全版のZeePlayを上書きインストールしてください。アンインストールやホットスポットの変更は不要です。</string>
@@ -85,6 +93,7 @@
     <string name="temporary_system_bars_description">有効にすると、設定メニューで指定した本数の指で上にスワイプすると、隠した車載端末のステータスバー・ナビゲーションバーを5秒間表示します。下スワイプは従来どおりZeePlay設定を開きます。端末側のジェスチャーと競合する場合はオフにしてください。機種によっては表示できません。</string>
     <string name="turn_card_overlay_note">ZeePlayが地図上に案内カードを描画します。位置は2%ずつ変更できます。iOS純正の案内カードだけを移動することはできません。再接続せずに変更が反映されます。</string>
     <string name="usage_access_lets_diplay_follow_the_instrument_theme_and_m">使用状況へのアクセスを許可すると、ZeePlayがメーターのテーマや地図カードの状態に追従できます。BYDメーター関連の画面イベントだけを端末内で処理します。</string>
+    <string name="video_off_gear_unreadable">車の画面で動画を再生できません：ZeePlay がギア位置を読み取れません。</string>
     <string name="vpn_authorization_adb_not_approved">この車載端末ではVPN許可画面を開けず、車載端末のADBがまだZeePlayを許可していないため、ZeePlayはVPNを許可できません。</string>
     <string name="vpn_authorization_adb_unusable">この車載端末ではVPN許可画面を開けず、ZeePlayは車載端末のネットワークADBを使ってVPNを許可することもできません。</string>
     <string name="vpn_authorization_unavailable">この車載端末ではVPN許可画面を開けません。ZeePlayに戻って接続権限を確認するか、無線接続をご利用ください。</string>

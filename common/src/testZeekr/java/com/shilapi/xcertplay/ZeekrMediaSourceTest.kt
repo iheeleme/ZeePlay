@@ -264,14 +264,16 @@ class ZeekrMediaSourceTest {
         source.start()
         idle()
         assertEquals(listOf(6), car.sources.toList())
-        assertEquals(0, car.claims)
+        // The source is claimed once the media center accepts it (9236f38e), like the stock bridge.
+        assertEquals(1, car.claims)
         val song = CarPlayNowPlaying(title = "Phone song", artist = "Artist", elapsedMillis = 1200, playing = true)
         source.update(song, null)
         idle()
         assertEquals("Phone song", car.title)
         assertEquals(1, car.state)
         assertEquals(1200L, car.position)
-        assertEquals(1, car.claims)
+        // ...and again when CarPlay starts playing.
+        assertEquals(2, car.claims)
         val metadataUpdates = car.metadataUpdates
         source.update(song.copy(elapsedMillis = 2400), null)
         idle()
@@ -282,11 +284,12 @@ class ZeekrMediaSourceTest {
         assertEquals(listOf(2), sent)
         source.update(song.copy(elapsedMillis = 2600), null)
         idle()
-        assertEquals(1, car.claims)
+        // The driver's source is not taken back on progress.
+        assertEquals(2, car.claims)
         assertTrue(source.select(6, 0))
         idle()
         assertEquals(listOf(2, 1), sent)
-        assertEquals(2, car.claims)
+        assertEquals(3, car.claims)
         source.close()
         idle()
         assertEquals(1, car.unregistered)

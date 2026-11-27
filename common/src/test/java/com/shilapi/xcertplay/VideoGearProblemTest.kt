@@ -26,7 +26,9 @@ import org.robolectric.util.ReflectionHelpers
 class VideoGearProblemTest {
     private val context: Context = RuntimeEnvironment.getApplication()
     private val prefs get() = context.getSharedPreferences("diplay_last_problem", Context.MODE_PRIVATE)
-    private val off = "Videos can’t play on the car screen: DiPlay can’t read the gear."
+    // The Zeekr edition's copy names the app ZeePlay (scripts/sync_zeekr_branding.py).
+    private val app = if (com.shilapi.xcertplay.host.BuildConfig.IS_ZEEKR) "ZeePlay" else "DiPlay"
+    private val off = "Videos can’t play on the car screen: $app can’t read the gear."
     private val stamp = "\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2} [+-]\\d{4}"
 
     @Before fun setUp() {

@@ -37,6 +37,8 @@ class NightModeSettingsTest {
         activity = controller.get()
         activity.setTheme(android.R.style.Theme_Material_NoActionBar)
         activity.getSharedPreferences("xcertplay_airplay", 0).edit().clear().commit()
+        // The standard dark theme: the Zeekr default (AUTO) repaints Settings when a mode is saved.
+        AirPlayPersistence.saveAppAppearance(activity, AppAppearance.DARK)
         CarPlayBackgroundSession.clear()
         controller.setup().visible()
     }
