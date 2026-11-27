@@ -94,6 +94,8 @@ class AdbClusterSelectionTest {
     }
 
     @Test fun legacyDirectTaskCanUseTheMeasuredPublicProjectionOnlyAfterOptIn() {
+        // BYD ADB cluster route; not offered in the Zeekr edition.
+        org.junit.Assume.assumeFalse(com.shilapi.xcertplay.host.BuildConfig.IS_ZEEKR)
         val id = ShadowDisplayManager.addDisplay("w1920dp-h720dp-mdpi", 5)
         shadowOf(app.getSystemService(DisplayManager::class.java).getDisplay(id)).apply {
             setName(DiLink4ClusterDisplay.NAME)

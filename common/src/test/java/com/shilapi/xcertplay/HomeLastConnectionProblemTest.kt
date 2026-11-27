@@ -30,6 +30,8 @@ class HomeLastConnectionProblemTest {
 
     @Before fun setUp() {
         clearSettings()
+        // The car hotspot stays off: ZeePlay does not start it (on by default in the Zeekr edition).
+        com.shilapi.xcertplay.network.CarHotspotSettings.setEnabled(context, false)
         CarPlayBackgroundSession.clear()
         CarHotspotOffConnectTest.HotspotState.on = true
         AirPlayPersistence.saveWirelessHotspotMode(context, WirelessHotspotMode.MANUAL)

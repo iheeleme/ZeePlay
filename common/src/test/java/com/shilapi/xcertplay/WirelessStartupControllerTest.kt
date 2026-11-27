@@ -137,6 +137,8 @@ class WirelessStartupControllerTest {
 
     @Test @Config(shadows = [CarHotspotOffConnectTest.HotspotState::class])
     fun aCarHotspotReportedOffIsNamed() {
+        // ZeePlay does not start the car hotspot here (it does by default in the Zeekr edition).
+        com.shilapi.xcertplay.network.CarHotspotSettings.setEnabled(RuntimeEnvironment.getApplication(), false)
         CarHotspotOffConnectTest.HotspotState.on = false
         val failure = hotspotStartFailure()
         assertEquals(WirelessStartupFailure.HOTSPOT_CONFIGURATION, failure.reason)

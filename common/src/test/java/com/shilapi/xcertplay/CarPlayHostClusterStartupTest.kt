@@ -44,6 +44,8 @@ class CarPlayHostClusterStartupTest {
     private val renderedMainFrames: MutableSet<AirPlaySession> = ConcurrentHashMap.newKeySet()
 
     @Before fun setUp() {
+        // BYD cluster displays (DiLink 4, Magic Sentry); the Zeekr cluster goes through ZeekrDisplayRouter.
+        org.junit.Assume.assumeFalse(com.shilapi.xcertplay.host.BuildConfig.IS_ZEEKR)
         activity = Robolectric.buildActivity(CarPlayHostActivity::class.java).get()
         installBydCarSettings(activity)
         AirPlayPersistence.saveClusterMapEnabled(activity, true)
@@ -60,6 +62,7 @@ class CarPlayHostClusterStartupTest {
     }
 
     @After fun tearDown() {
+        if (!::activity.isInitialized) return // skipped in the Zeekr edition
         (get("mainHandler") as Handler).removeCallbacksAndMessages(null)
         ClusterActivityOutput.stop(activity)
         CarPlayBackgroundSession.clear()

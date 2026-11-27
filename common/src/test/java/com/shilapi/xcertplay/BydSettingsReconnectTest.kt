@@ -30,6 +30,8 @@ class BydSettingsReconnectTest {
     private var reconnects = 0
 
     @Before fun setUp() {
+        // BYD vehicle settings; not shown in the Zeekr edition.
+        org.junit.Assume.assumeFalse(com.shilapi.xcertplay.host.BuildConfig.IS_ZEEKR)
         val app = RuntimeEnvironment.getApplication()
         for (name in listOf("diplay_byd_outputs", "diplay_byd_vehicle_fields", "diplay_car_hotspot", "xcertplay_airplay", "diplay")) {
             app.getSharedPreferences(name, 0).edit().clear().commit()

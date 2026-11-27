@@ -221,6 +221,8 @@ class CarHotspotSwitchTest {
     }
 
     @Test fun returningFromApprovalBeforeCompletionKeepsThePage() {
+        // Returning from the car's ADB key approval: a BYD flow; ZeePlay uses no ADB on Zeekr.
+        org.junit.Assume.assumeFalse(com.shilapi.xcertplay.host.BuildConfig.IS_ZEEKR)
         hotspotSwitch().isChecked = true
         awaitGrant()
         prepareResume()
@@ -234,6 +236,8 @@ class CarHotspotSwitchTest {
     }
 
     @Test fun returningFromApprovalAfterCompletionKeepsThePage() {
+        // Returning from the car's ADB key approval: a BYD flow; ZeePlay uses no ADB on Zeekr.
+        org.junit.Assume.assumeFalse(com.shilapi.xcertplay.host.BuildConfig.IS_ZEEKR)
         hotspotSwitch().isChecked = true
         awaitGrant()
         prepareResume()

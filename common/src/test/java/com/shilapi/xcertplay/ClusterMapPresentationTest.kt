@@ -68,7 +68,14 @@ class ClusterMapPresentationTest {
     }
 
     @Test @Config(sdk = [28, 29])
-    fun legacySurfaceUsesAnOpaquePlaceholderWithoutChangingSurfaceAlpha() = withPresentation { presentation ->
+    fun legacySurfaceUsesAnOpaquePlaceholderWithoutChangingSurfaceAlpha() {
+        // The dark theme is the standard default; the Zeekr edition follows the car (AUTO), so set it here.
+        val appearance = AirPlayPersistence.loadAppAppearance(context)
+        AirPlayPersistence.saveAppAppearance(context, AppAppearance.DARK)
+        try { legacySurfacePlaceholder() } finally { AirPlayPersistence.saveAppAppearance(context, appearance) }
+    }
+
+    private fun legacySurfacePlaceholder() = withPresentation { presentation ->
         val video: android.view.View = org.robolectric.util.ReflectionHelpers.getField(presentation, "videoView")
         val label: android.view.View = org.robolectric.util.ReflectionHelpers.getField(presentation, "waitingLabel")
         assertTrue(video is android.view.SurfaceView)
@@ -205,6 +212,8 @@ class ClusterMapPresentationTest {
         }
     }
     @Test fun dilink4MeasuredProjectionIsSelected() {
+        // DiLink cluster displays; the Zeekr edition picks its own cluster.
+        org.junit.Assume.assumeFalse(com.shilapi.xcertplay.host.BuildConfig.IS_ZEEKR)
         val id = display(DiLink4ClusterDisplay.NAME, "w1920dp-h720dp-mdpi")
         try {
             assertEquals(id, ClusterMapPresentation.findDisplay(context)?.displayId)
@@ -214,6 +223,8 @@ class ClusterMapPresentationTest {
     }
 
     @Test fun dilink3SmallerProjectionDisplayIsSelected() {
+        // DiLink cluster displays; the Zeekr edition picks its own cluster.
+        org.junit.Assume.assumeFalse(com.shilapi.xcertplay.host.BuildConfig.IS_ZEEKR)
         val id = display(DiLink4ClusterDisplay.NAME, "w1280dp-h480dp-mdpi")
         try {
             assertEquals(id, ClusterMapPresentation.findDisplay(context)?.displayId)
@@ -272,6 +283,8 @@ class ClusterMapPresentationTest {
     }
 
     @Test fun disabledClusterStillReportsDisplayWithoutNavigationReceiver() {
+        // DiLink cluster displays; the Zeekr edition picks its own cluster.
+        org.junit.Assume.assumeFalse(com.shilapi.xcertplay.host.BuildConfig.IS_ZEEKR)
         val enabled = AirPlayPersistence.loadClusterMapEnabled(context)
         AirPlayPersistence.saveClusterMapEnabled(context, false)
         val id = display(DiLink4ClusterDisplay.NAME, "w1920dp-h720dp-mdpi")

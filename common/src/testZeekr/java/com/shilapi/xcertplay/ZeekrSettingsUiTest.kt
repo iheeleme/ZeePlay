@@ -71,9 +71,13 @@ class ZeekrSettingsUiTest {
         ReflectionHelpers.callInstanceMethod<Unit>(screen, "zeekrInteractionControls",
             ReflectionHelpers.ClassParameter.from(LinearLayout::class.java, card))
         val controls = children(card).filterIsInstance<Switch>().toList()
-        assertEquals(3, controls.size)
-        assertTrue(controls.all { it.isChecked })
-        controls.forEach { it.isChecked = false }
+        // Media center, auto-select, playback controls, cluster map, HUD, car Bluetooth pause, dark HUD:
+        // all on by default in the Zeekr edition.
+        assertEquals(7, controls.size)
+        assertTrue(controls.filterNot { it.isChecked }.map { it.contentDescription }.toString(), controls.all { it.isChecked })
+        val media = listOf(R.string.settings_zeekr_media, R.string.settings_zeekr_auto_select, R.string.settings_zeekr_controls)
+            .map(screen::getString)
+        controls.filter { it.contentDescription in media }.also { assertEquals(3, it.size) }.forEach { it.isChecked = false }
         assertFalse(ZeekrInteractionSettings.mediaEnabled(screen))
         assertFalse(ZeekrInteractionSettings.autoSelect(screen))
         assertFalse(ZeekrInteractionSettings.controlsEnabled(screen))
